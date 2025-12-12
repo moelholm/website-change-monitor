@@ -75,12 +75,13 @@ jobs:
           script: |
             const fs = require('fs');
             
-            // Read the step summary to get change details
-            let summaryContent = '';
+            // Read the changes details from the file created by the monitor
+            let changesContent = '';
             try {
-              summaryContent = fs.readFileSync(process.env.GITHUB_STEP_SUMMARY, 'utf8');
+              changesContent = fs.readFileSync('changes.md', 'utf8');
             } catch (error) {
-              console.log('Could not read step summary');
+              console.log('Could not read changes file:', error.message);
+              changesContent = '_Details not available_';
             }
             
             const date = new Date().toISOString().split('T')[0];
@@ -90,7 +91,7 @@ jobs:
               'Changes were detected in one or more monitored websites during the scheduled check.\n\n' +
               '**Workflow Run**: ' + context.payload.repository.html_url + '/actions/runs/' + context.runId + '\n\n' +
               '### Details\n\n' +
-              summaryContent + '\n\n' +
+              changesContent + '\n' +
               '---\n' +
               '*This issue was automatically created by the Website Change Monitor workflow.*';
 

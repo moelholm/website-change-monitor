@@ -206,6 +206,25 @@ class WebsiteMonitor:
             else:
                 f.write("## ✅ No Changes Detected\n\n")
                 f.write("All monitored websites remain unchanged.\n")
+    
+    def create_changes_markdown(self) -> str:
+        """Create markdown content describing the detected changes.
+        
+        Returns:
+            Markdown formatted string with change details
+        """
+        if not self.changes_detected:
+            return "No changes detected.\n"
+        
+        lines = []
+        for change in self.changes_detected:
+            lines.append(f"### {change['jobname']}\n")
+            lines.append(f"- **URL**: {change['url']}\n")
+            lines.append(f"- **Old Checksum**: `{change['old_checksum']}`\n")
+            lines.append(f"- **New Checksum**: `{change['new_checksum']}`\n")
+            lines.append(f"- **Detected At**: {change['detected_at']}\n\n")
+        
+        return ''.join(lines)
 
     def set_output(self, name: str, value: str):
         """Set GitHub Actions output variable."""
@@ -231,6 +250,12 @@ class WebsiteMonitor:
         
         # Create summary
         self.create_summary_output()
+        
+        # Save changes to a file for the workflow to use
+        if self.changes_detected:
+            changes_markdown = self.create_changes_markdown()
+            with open('changes.md', 'w', encoding='utf-8') as f:
+                f.write(changes_markdown)
         
         # Set outputs for GitHub Actions
         changes_count = len(self.changes_detected)
