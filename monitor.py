@@ -17,10 +17,10 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import boto3
-import requests
 import yaml
 from botocore.exceptions import ClientError
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 
 class WebsiteMonitor:
@@ -63,22 +63,34 @@ class WebsiteMonitor:
             sys.exit(1)
 
     def fetch_page_content(self, url: str) -> Optional[str]:
-        """Fetch the content of a webpage.
+        """Fetch the fully loaded DOM content of a webpage using Playwright.
         
         Args:
             url: URL of the webpage to fetch
             
         Returns:
-            Page content as string, or None if fetch failed
+            Fully loaded page content as string, or None if fetch failed
         """
         try:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (compatible; WebsiteChangeMonitor/1.0; +https://github.com/moelholm/website-change-monitor)'
-            }
-            response = requests.get(url, timeout=30, headers=headers, verify=True)
-            response.raise_for_status()
-            return response.text
-        except requests.RequestException as e:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                context = browser.new_context(
+                    user_agent='Mozilla/5.0 (compatible; WebsiteChangeMonitor/1.0; +https://github.com/moelholm/website-change-monitor)'
+                )
+                page = context.new_page()
+                
+                # Navigate to the URL and wait for the page to load
+                page.goto(url, timeout=30000, wait_until='networkidle')
+                
+                # Get the fully loaded DOM content
+                content = page.content()
+                
+                browser.close()
+                return content
+        except PlaywrightTimeoutError as e:
+            print(f"Error fetching {url}: Timeout - {e}")
+            return None
+        except Exception as e:
             print(f"Error fetching {url}: {e}")
             return None
 

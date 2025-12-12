@@ -5,6 +5,7 @@ A GitHub Actions-powered service that monitors websites for changes using AWS Dy
 ## Features
 
 - 🕐 **Automated Monitoring**: Runs every hour via GitHub Actions
+- 🌐 **JavaScript Support**: Uses Playwright to fetch fully loaded DOM (JavaScript-rendered content)
 - 🔍 **Change Detection**: 
   - SHA-256 checksums to detect any content changes
   - Regex pattern matching to detect specific text appearing or disappearing
@@ -178,7 +179,7 @@ python monitor.py
 ## How It Works
 
 1. **Configuration Loading**: Reads website jobs from `config.yml`
-2. **Content Fetching**: Downloads each website's content
+2. **Content Fetching**: Uses Playwright to fetch fully loaded DOM (including JavaScript-rendered content)
 3. **Change Detection**: Two monitoring modes:
    - **Checksum Mode**: Computes SHA-256 hash and detects any content change
    - **Pattern Mode**: Strips HTML tags, searches for regex pattern, and triggers based on action:
