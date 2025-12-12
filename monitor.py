@@ -4,7 +4,7 @@ Website Change Monitor Script
 
 This script monitors websites for changes by:
 1. Reading job configurations from config.yml
-2. Fetching website content and calculating MD5 checksums
+2. Fetching website content and calculating SHA-256 checksums
 3. Storing/comparing checksums in DynamoDB
 4. Creating GitHub issues when changes are detected
 """
@@ -50,7 +50,7 @@ class WebsiteMonitor:
             List of job configurations with jobname and url
         """
         try:
-            with open(self.config_file, 'r') as f:
+            with open(self.config_file, 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
                 return config.get('jobs', [])
         except FileNotFoundError:
@@ -70,7 +70,10 @@ class WebsiteMonitor:
             Page content as string, or None if fetch failed
         """
         try:
-            response = requests.get(url, timeout=30)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (compatible; WebsiteChangeMonitor/1.0; +https://github.com/moelholm/website-change-monitor)'
+            }
+            response = requests.get(url, timeout=30, headers=headers, verify=True)
             response.raise_for_status()
             return response.text
         except requests.RequestException as e:
@@ -78,15 +81,15 @@ class WebsiteMonitor:
             return None
 
     def calculate_checksum(self, content: str) -> str:
-        """Calculate MD5 checksum of content.
+        """Calculate SHA-256 checksum of content.
         
         Args:
             content: String content to checksum
             
         Returns:
-            MD5 checksum as hexadecimal string
+            SHA-256 checksum as hexadecimal string
         """
-        return hashlib.md5(content.encode('utf-8')).hexdigest()
+        return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
     def get_stored_checksum(self, jobname: str) -> Optional[Dict]:
         """Retrieve stored checksum from DynamoDB.
@@ -111,7 +114,7 @@ class WebsiteMonitor:
         Args:
             jobname: Job identifier
             url: URL being monitored
-            checksum: MD5 checksum of the content
+            checksum: SHA-256 checksum of the content
         """
         self._ensure_dynamodb_connection()
         try:
@@ -189,7 +192,7 @@ class WebsiteMonitor:
         if not summary_file:
             return
         
-        with open(summary_file, 'a') as f:
+        with open(summary_file, 'a', encoding='utf-8') as f:
             f.write("# Website Change Monitor Results\n\n")
             
             if self.changes_detected:
@@ -208,7 +211,7 @@ class WebsiteMonitor:
         """Set GitHub Actions output variable."""
         output_file = os.environ.get('GITHUB_OUTPUT')
         if output_file:
-            with open(output_file, 'a') as f:
+            with open(output_file, 'a', encoding='utf-8') as f:
                 f.write(f"{name}={value}\n")
 
     def run(self):

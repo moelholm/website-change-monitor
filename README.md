@@ -5,7 +5,7 @@ A GitHub Actions-powered service that monitors websites for changes using AWS Dy
 ## Features
 
 - 🕐 **Automated Monitoring**: Runs every 6 hours via GitHub Actions
-- 🔍 **Change Detection**: Uses MD5 checksums to detect content changes
+- 🔍 **Change Detection**: Uses SHA-256 checksums to detect content changes
 - 💾 **State Persistence**: Stores checksums in AWS DynamoDB
 - 🔔 **Notifications**: Creates GitHub issues when changes are detected
 - ☁️ **AWS Integration**: Uses OIDC for secure AWS authentication
@@ -99,7 +99,7 @@ python monitor.py
 
 1. **Configuration Loading**: Reads website jobs from `config.yml`
 2. **Content Fetching**: Downloads each website's content
-3. **Checksum Calculation**: Computes MD5 hash of the content
+3. **Checksum Calculation**: Computes SHA-256 hash of the content
 4. **State Comparison**: Compares with stored checksum in DynamoDB
 5. **Change Detection**: If checksums differ, a change is detected
 6. **Notification**: Creates a GitHub issue with change details
@@ -139,7 +139,7 @@ The DynamoDB table stores the following attributes:
 
 - `jobname` (String, Partition Key): Unique job identifier
 - `url` (String): Website URL
-- `checksum` (String): MD5 checksum of last known content
+- `checksum` (String): SHA-256 checksum of last known content
 - `datetime` (String): ISO 8601 timestamp of last check
 
 ## Troubleshooting
