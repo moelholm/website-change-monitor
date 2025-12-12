@@ -120,17 +120,15 @@ class WebsiteMonitor:
         """
         # Replace zero-width space and other problematic Unicode whitespace
         # with regular spaces to ensure regex \s patterns work correctly
-        unicode_whitespace = [
-            '\u200b',  # Zero-width space
-            '\u200c',  # Zero-width non-joiner
-            '\u200d',  # Zero-width joiner
-            '\ufeff',  # Zero-width no-break space (BOM)
-        ]
+        # Using str.translate() for better performance with large text
+        translation_table = str.maketrans({
+            '\u200b': ' ',  # Zero-width space
+            '\u200c': ' ',  # Zero-width non-joiner
+            '\u200d': ' ',  # Zero-width joiner
+            '\ufeff': ' ',  # Zero-width no-break space (BOM)
+        })
         
-        for char in unicode_whitespace:
-            text = text.replace(char, ' ')
-        
-        return text
+        return text.translate(translation_table)
 
     def get_stored_state(self, jobname: str) -> Optional[Dict]:
         """Retrieve stored state from DynamoDB.

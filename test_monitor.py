@@ -6,6 +6,7 @@ This script tests the core functionality of the monitor without requiring
 AWS credentials or DynamoDB access.
 """
 
+import re
 import sys
 import os
 
@@ -97,7 +98,6 @@ def test_whitespace_normalization():
 def test_pattern_matching_with_unicode_whitespace():
     """Test that pattern matching works with Unicode whitespace after normalization."""
     print("\nTesting pattern matching with Unicode whitespace...")
-    import re
     m = monitor.WebsiteMonitor()
     
     # The pattern from the config
