@@ -33,5 +33,8 @@ awscliv2.zip
 tmp/
 *.tmp
 
+# Monitor output files (generated at runtime)
+changes.md
+
 # Test files (keep in repo for documentation)
 # test_monitor.py is included for reference
