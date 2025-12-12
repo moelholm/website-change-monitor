@@ -14,7 +14,7 @@ import os
 import re
 import sys
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import boto3
 import requests
@@ -45,11 +45,11 @@ class WebsiteMonitor:
             self.dynamodb = boto3.resource('dynamodb')
             self.table = self.dynamodb.Table(self.table_name)
 
-    def load_config(self) -> List[Dict[str, str]]:
+    def load_config(self) -> List[Dict[str, Any]]:
         """Load job configurations from YAML file.
         
         Returns:
-            List of job configurations with jobname and url
+            List of job configurations with jobname, url, and optional pattern/action
         """
         try:
             with open(self.config_file, 'r', encoding='utf-8') as f:
@@ -145,7 +145,36 @@ class WebsiteMonitor:
         except ClientError as e:
             print(f"Error storing checksum for {jobname}: {e}")
 
-    def check_website(self, job: Dict[str, str]) -> bool:
+    def validate_pattern(self, pattern: str) -> bool:
+        """Validate a regex pattern for safety.
+        
+        Args:
+            pattern: Regular expression pattern to validate
+            
+        Returns:
+            True if pattern is valid and safe
+        """
+        try:
+            # Try to compile the pattern
+            re.compile(pattern)
+            
+            # Basic checks for potentially dangerous patterns
+            # Prevent excessive repetition patterns that could cause ReDoS
+            if pattern.count('*') > 10 or pattern.count('+') > 10:
+                print(f"  ⚠️  Warning: Pattern contains many repetition operators")
+                return False
+            
+            # Prevent overly complex patterns
+            if len(pattern) > 500:
+                print(f"  ⚠️  Warning: Pattern is too long (>500 chars)")
+                return False
+                
+            return True
+        except re.error as e:
+            print(f"  ⚠️  Invalid regex pattern: {e}")
+            return False
+
+    def check_website(self, job: Dict[str, Any]) -> bool:
         """Check a single website for changes.
         
         Args:
@@ -163,6 +192,11 @@ class WebsiteMonitor:
         if pattern:
             print(f"  Pattern: {pattern}")
             print(f"  Action: {action}")
+            
+            # Validate pattern before using it
+            if not self.validate_pattern(pattern):
+                print(f"  ⚠️  Skipping pattern check due to invalid pattern")
+                pattern = None
         
         # Fetch current content
         content = self.fetch_page_content(url)

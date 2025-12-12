@@ -90,6 +90,24 @@ def test_pattern_matching():
         print(f"  ✓ '{text}' -> {match}")
 
 
+def test_pattern_validation():
+    """Test pattern validation for safety."""
+    print("\nTesting pattern validation...")
+    m = monitor.WebsiteMonitor()
+    
+    # Valid patterns
+    assert m.validate_pattern(r"100\s+miles"), "Simple pattern should be valid"
+    print("  ✓ Simple pattern is valid")
+    
+    # Invalid pattern
+    assert not m.validate_pattern(r"(.*)*" * 20), "Pattern with excessive repetition should be invalid"
+    print("  ✓ Dangerous pattern is rejected")
+    
+    # Too long pattern
+    assert not m.validate_pattern("a" * 600), "Overly long pattern should be invalid"
+    print("  ✓ Overly long pattern is rejected")
+
+
 def test_fetch_content():
     """Test content fetching (will fail without network, which is OK)."""
     print("\nTesting content fetching...")
@@ -116,6 +134,7 @@ def main():
         test_checksum_calculation()
         test_html_stripping()
         test_pattern_matching()
+        test_pattern_validation()
         test_fetch_content()
         
         print("\n" + "=" * 60)
