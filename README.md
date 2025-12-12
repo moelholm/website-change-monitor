@@ -4,7 +4,7 @@ A GitHub Actions-powered service that monitors websites for changes using AWS Dy
 
 ## Features
 
-- 🕐 **Automated Monitoring**: Runs every 6 hours via GitHub Actions
+- 🕐 **Automated Monitoring**: Runs every hour via GitHub Actions
 - 🔍 **Change Detection**: Uses SHA-256 checksums to detect content changes
 - 💾 **State Persistence**: Stores checksums in AWS DynamoDB
 - 🔔 **Notifications**: Creates GitHub issues when changes are detected
@@ -143,7 +143,7 @@ Replace `YOUR_ACCOUNT_ID` and `YOUR_GITHUB_USERNAME` with your actual values.
 
 ### Automatic Monitoring
 
-The workflow runs automatically every 6 hours. You can also trigger it manually:
+The workflow runs automatically every hour. You can also trigger it manually:
 
 1. Go to **Actions** tab in your repository
 2. Select **Monitor Websites** workflow
