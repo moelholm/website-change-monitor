@@ -109,25 +109,25 @@ class WebsiteMonitor:
         soup = BeautifulSoup(content, 'html.parser')
         return soup.get_text(separator=' ', strip=True)
 
-    def get_stored_checksum(self, jobname: str) -> Optional[Dict]:
-        """Retrieve stored checksum from DynamoDB.
+    def get_stored_state(self, jobname: str) -> Optional[Dict]:
+        """Retrieve stored state from DynamoDB.
         
         Args:
             jobname: Job identifier
             
         Returns:
-            Item dict with checksum and datetime, or None if not found
+            Item dict with checksum, url, datetime, and optional pattern_found, or None if not found
         """
         self._ensure_dynamodb_connection()
         try:
             response = self.table.get_item(Key={'jobname': jobname})
             return response.get('Item')
         except ClientError as e:
-            print(f"Error retrieving checksum for {jobname}: {e}")
+            print(f"Error retrieving state for {jobname}: {e}")
             return None
 
-    def store_checksum(self, jobname: str, url: str, checksum: str, pattern_found: Optional[bool] = None):
-        """Store checksum in DynamoDB.
+    def store_state(self, jobname: str, url: str, checksum: str, pattern_found: Optional[bool] = None):
+        """Store monitoring state in DynamoDB.
         
         Args:
             jobname: Job identifier
@@ -147,7 +147,7 @@ class WebsiteMonitor:
                 item['pattern_found'] = pattern_found
             self.table.put_item(Item=item)
         except ClientError as e:
-            print(f"Error storing checksum for {jobname}: {e}")
+            print(f"Error storing state for {jobname}: {e}")
 
     def validate_pattern(self, pattern: str) -> bool:
         """Validate a regex pattern for safety.
@@ -225,7 +225,7 @@ class WebsiteMonitor:
         current_checksum = self.calculate_checksum(content)
         
         # Get stored state
-        stored_item = self.get_stored_checksum(jobname)
+        stored_item = self.get_stored_state(jobname)
         
         # Pattern-based monitoring
         if pattern:
@@ -238,7 +238,7 @@ class WebsiteMonitor:
             if stored_item is None:
                 # First time monitoring this website
                 print(f"  ℹ️  First check for {jobname}, pattern {'found' if pattern_found else 'not found'}")
-                self.store_checksum(jobname, url, current_checksum, pattern_found)
+                self.store_state(jobname, url, current_checksum, pattern_found)
                 return False
             
             stored_pattern_found = stored_item.get('pattern_found', False)
@@ -257,7 +257,7 @@ class WebsiteMonitor:
                 print(f"  ✅ No relevant change: pattern is {'found' if pattern_found else 'not found'}")
             
             # Update stored state
-            self.store_checksum(jobname, url, current_checksum, pattern_found)
+            self.store_state(jobname, url, current_checksum, pattern_found)
             
             if change_detected:
                 # Record change
@@ -277,7 +277,7 @@ class WebsiteMonitor:
         if stored_item is None:
             # First time monitoring this website
             print(f"  ℹ️  First check for {jobname}, storing initial checksum")
-            self.store_checksum(jobname, url, current_checksum)
+            self.store_state(jobname, url, current_checksum)
             return False
         
         stored_checksum = stored_item.get('checksum')
@@ -289,7 +289,7 @@ class WebsiteMonitor:
             print(f"     New checksum: {current_checksum}")
             
             # Update stored checksum
-            self.store_checksum(jobname, url, current_checksum)
+            self.store_state(jobname, url, current_checksum)
             
             # Record change
             self.changes_detected.append({
