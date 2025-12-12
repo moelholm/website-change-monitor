@@ -62,6 +62,7 @@ jobs:
 
       - name: Run website monitor
         id: monitor
+        continue-on-error: true
         env:
           DYNAMODB_TABLE_NAME: ${{ secrets.DYNAMODB_TABLE_NAME || 'website-change-monitor' }}
         run: |
