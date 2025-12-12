@@ -26,10 +26,6 @@ from bs4 import BeautifulSoup
 class WebsiteMonitor:
     """Monitor websites for changes using DynamoDB for state tracking."""
 
-    # Pattern validation constants
-    MAX_PATTERN_LENGTH = 500
-    MAX_REPETITION_OPERATORS = 10
-
     def __init__(self, config_file: str = "config.yml", table_name: str = "website-change-monitor"):
         """Initialize the website monitor.
         
@@ -161,31 +157,6 @@ class WebsiteMonitor:
         try:
             # Try to compile the pattern
             re.compile(pattern)
-            
-            # Prevent overly complex patterns
-            if len(pattern) > self.MAX_PATTERN_LENGTH:
-                print(f"  ⚠️  Warning: Pattern is too long (>{self.MAX_PATTERN_LENGTH} chars)")
-                return False
-            
-            # Basic checks for potentially dangerous patterns
-            # Prevent excessive repetition patterns that could cause ReDoS
-            if pattern.count('*') > self.MAX_REPETITION_OPERATORS or pattern.count('+') > self.MAX_REPETITION_OPERATORS:
-                print(f"  ⚠️  Warning: Pattern contains many repetition operators")
-                return False
-            
-            # Check for nested quantifiers which are classic ReDoS patterns
-            # Patterns like (a+)+, (a*)*, (a*)+, (a+)* are dangerous
-            nested_quantifier_patterns = [
-                r'\([^)]*\+\)\+',  # (x+)+
-                r'\([^)]*\*\)\*',  # (x*)*
-                r'\([^)]*\*\)\+',  # (x*)+
-                r'\([^)]*\+\)\*',  # (x+)*
-            ]
-            for dangerous_pattern in nested_quantifier_patterns:
-                if re.search(dangerous_pattern, pattern):
-                    print(f"  ⚠️  Warning: Pattern contains nested quantifiers (potential ReDoS)")
-                    return False
-                
             return True
         except re.error as e:
             print(f"  ⚠️  Invalid regex pattern: {e}")
@@ -268,6 +239,7 @@ class WebsiteMonitor:
                 self.changes_detected.append({
                     'jobname': jobname,
                     'url': url,
+                    'monitoring_type': 'pattern',
                     'pattern': pattern,
                     'action': action,
                     'pattern_found': pattern_found,
@@ -299,6 +271,7 @@ class WebsiteMonitor:
             self.changes_detected.append({
                 'jobname': jobname,
                 'url': url,
+                'monitoring_type': 'checksum',
                 'old_checksum': stored_checksum,
                 'new_checksum': current_checksum,
                 'detected_at': datetime.now(timezone.utc).isoformat()
@@ -324,13 +297,16 @@ class WebsiteMonitor:
                     f.write(f"### {change['jobname']}\n")
                     f.write(f"- **URL**: {change['url']}\n")
                     
+                    monitoring_type = change.get('monitoring_type', 'checksum')
+                    f.write(f"- **Monitoring Type**: {monitoring_type}\n")
+                    
                     # Pattern-based change
-                    if 'pattern' in change:
+                    if monitoring_type == 'pattern':
                         f.write(f"- **Pattern**: `{change['pattern']}`\n")
                         f.write(f"- **Action**: {change['action']}\n")
                         f.write(f"- **Pattern Found**: {change['pattern_found']}\n")
                     # Checksum-based change
-                    else:
+                    elif monitoring_type == 'checksum':
                         f.write(f"- **Old Checksum**: `{change['old_checksum']}`\n")
                         f.write(f"- **New Checksum**: `{change['new_checksum']}`\n")
                     
@@ -373,6 +349,13 @@ class WebsiteMonitor:
         print("=" * 60)
         if self.changes_detected:
             print(f"✨ Monitoring complete: {changes_count} change(s) detected")
+            # Log monitoring types used
+            pattern_changes = sum(1 for c in self.changes_detected if c.get('monitoring_type') == 'pattern')
+            checksum_changes = sum(1 for c in self.changes_detected if c.get('monitoring_type') == 'checksum')
+            if pattern_changes > 0:
+                print(f"   - Pattern-based: {pattern_changes}")
+            if checksum_changes > 0:
+                print(f"   - Checksum-based: {checksum_changes}")
         else:
             print("✨ Monitoring complete: No changes detected")
         print("=" * 60)
