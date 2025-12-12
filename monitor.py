@@ -214,7 +214,7 @@ class WebsiteMonitor:
             Markdown formatted string with change details
         """
         if not self.changes_detected:
-            return "No changes detected.\n"
+            return "_No changes detected._\n"
         
         lines = []
         for change in self.changes_detected:
@@ -252,10 +252,9 @@ class WebsiteMonitor:
         self.create_summary_output()
         
         # Save changes to a file for the workflow to use
-        if self.changes_detected:
-            changes_markdown = self.create_changes_markdown()
-            with open('changes.md', 'w', encoding='utf-8') as f:
-                f.write(changes_markdown)
+        changes_markdown = self.create_changes_markdown()
+        with open('changes.md', 'w', encoding='utf-8') as f:
+            f.write(changes_markdown)
         
         # Set outputs for GitHub Actions
         changes_count = len(self.changes_detected)
