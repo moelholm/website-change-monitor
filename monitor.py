@@ -25,6 +25,9 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 
 class WebsiteMonitor:
     """Monitor websites for changes using DynamoDB for state tracking."""
+    
+    # Timeout for page navigation in milliseconds
+    PAGE_LOAD_TIMEOUT_MS = 30000
 
     def __init__(self, config_file: str = "config.yml", table_name: str = "website-change-monitor"):
         """Initialize the website monitor.
@@ -74,19 +77,20 @@ class WebsiteMonitor:
         try:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
-                context = browser.new_context(
-                    user_agent='Mozilla/5.0 (compatible; WebsiteChangeMonitor/1.0; +https://github.com/moelholm/website-change-monitor)'
-                )
-                page = context.new_page()
-                
-                # Navigate to the URL and wait for the page to load
-                page.goto(url, timeout=30000, wait_until='networkidle')
-                
-                # Get the fully loaded DOM content
-                content = page.content()
-                
-                browser.close()
-                return content
+                try:
+                    context = browser.new_context(
+                        user_agent='Mozilla/5.0 (compatible; WebsiteChangeMonitor/1.0; +https://github.com/moelholm/website-change-monitor)'
+                    )
+                    page = context.new_page()
+                    
+                    # Navigate to the URL and wait for the page to load
+                    page.goto(url, timeout=self.PAGE_LOAD_TIMEOUT_MS, wait_until='networkidle')
+                    
+                    # Get the fully loaded DOM content
+                    content = page.content()
+                    return content
+                finally:
+                    browser.close()
         except PlaywrightTimeoutError as e:
             print(f"Error fetching {url}: Timeout - {e}")
             return None
