@@ -216,7 +216,7 @@ class WebsiteMonitor:
             
             # Validate pattern before using it
             if not self.validate_pattern(pattern):
-                print(f"  ⚠️  Skipping pattern check due to invalid pattern")
+                print(f"  ⚠️  Invalid pattern. Falling back to checksum-based monitoring.")
                 pattern = None
         
         # Fetch current content

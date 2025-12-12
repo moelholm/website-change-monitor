@@ -115,6 +115,54 @@ def test_pattern_validation():
     print("  ✓ Overly long pattern is rejected")
 
 
+def test_action_validation():
+    """Test that invalid action values are rejected."""
+    print("\nTesting action validation...")
+    m = monitor.WebsiteMonitor()
+    
+    # Mock job with invalid action
+    invalid_action_job = {
+        'jobname': 'test-job',
+        'url': 'https://example.com',
+        'pattern': 'test',
+        'action': 'invalid-action'
+    }
+    
+    # Mock fetch to avoid network call
+    original_fetch = m.fetch_page_content
+    original_get_state = m.get_stored_state
+    original_store_state = m.store_state
+    
+    m.fetch_page_content = lambda url: "<html><body>test</body></html>"
+    m.get_stored_state = lambda jobname: None  # Simulate first run
+    m.store_state = lambda *args, **kwargs: None  # Mock storage
+    
+    try:
+        result = m.check_website(invalid_action_job)
+        assert result == False, "Invalid action should return False"
+        print("  ✓ Invalid action 'invalid-action' is rejected")
+        
+        # Test empty string action
+        invalid_action_job['action'] = ''
+        result = m.check_website(invalid_action_job)
+        assert result == False, "Empty action should return False"
+        print("  ✓ Empty action is rejected")
+        
+        # Test valid actions work (should not raise errors)
+        invalid_action_job['action'] = 'when-found'
+        result = m.check_website(invalid_action_job)
+        print("  ✓ Valid action 'when-found' is accepted")
+        
+        invalid_action_job['action'] = 'when-not-found'
+        result = m.check_website(invalid_action_job)
+        print("  ✓ Valid action 'when-not-found' is accepted")
+        
+    finally:
+        m.fetch_page_content = original_fetch
+        m.get_stored_state = original_get_state
+        m.store_state = original_store_state
+
+
 def test_fetch_content():
     """Test content fetching (will fail without network, which is OK)."""
     print("\nTesting content fetching...")
@@ -142,6 +190,7 @@ def main():
         test_html_stripping()
         test_pattern_matching()
         test_pattern_validation()
+        test_action_validation()
         test_fetch_content()
         
         print("\n" + "=" * 60)
