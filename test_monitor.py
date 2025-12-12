@@ -108,6 +108,30 @@ def test_pattern_validation():
         print("  ✓ Malformed pattern is rejected")
 
 
+def test_should_trigger_alert():
+    """Test the should_trigger_alert helper method."""
+    print("\nTesting should_trigger_alert logic...")
+    m = monitor.WebsiteMonitor()
+    
+    # Test 'when-not-found' action
+    assert m.should_trigger_alert('when-not-found', True, False) == True, "Should trigger when pattern disappears"
+    assert m.should_trigger_alert('when-not-found', False, False) == False, "Should not trigger when pattern stays absent"
+    assert m.should_trigger_alert('when-not-found', True, True) == False, "Should not trigger when pattern stays present"
+    assert m.should_trigger_alert('when-not-found', False, True) == False, "Should not trigger when pattern appears"
+    print("  ✓ 'when-not-found' action logic correct")
+    
+    # Test 'when-found' action
+    assert m.should_trigger_alert('when-found', False, True) == True, "Should trigger when pattern appears"
+    assert m.should_trigger_alert('when-found', True, True) == False, "Should not trigger when pattern stays present"
+    assert m.should_trigger_alert('when-found', False, False) == False, "Should not trigger when pattern stays absent"
+    assert m.should_trigger_alert('when-found', True, False) == False, "Should not trigger when pattern disappears"
+    print("  ✓ 'when-found' action logic correct")
+    
+    # Test invalid action
+    assert m.should_trigger_alert('invalid', True, False) == False, "Invalid action should not trigger"
+    print("  ✓ Invalid action returns False")
+
+
 def test_action_validation():
     """Test that invalid action values are rejected."""
     print("\nTesting action validation...")
@@ -183,6 +207,7 @@ def main():
         test_html_stripping()
         test_pattern_matching()
         test_pattern_validation()
+        test_should_trigger_alert()
         test_action_validation()
         test_fetch_content()
         

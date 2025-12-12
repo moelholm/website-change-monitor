@@ -162,6 +162,25 @@ class WebsiteMonitor:
             print(f"  ⚠️  Invalid regex pattern: {e}")
             return False
 
+    def should_trigger_alert(self, action: str, stored_pattern_found: bool, current_pattern_found: bool) -> bool:
+        """Determine if a pattern change should trigger an alert.
+        
+        Args:
+            action: Action type ('when-found' or 'when-not-found')
+            stored_pattern_found: Whether pattern was found in previous check
+            current_pattern_found: Whether pattern is found in current check
+            
+        Returns:
+            True if alert should be triggered, False otherwise
+        """
+        if action == 'when-not-found':
+            # Trigger when pattern was found before but is not found now
+            return stored_pattern_found and not current_pattern_found
+        elif action == 'when-found':
+            # Trigger when pattern was not found before but is found now
+            return not stored_pattern_found and current_pattern_found
+        return False
+
     def check_website(self, job: Dict[str, Any]) -> bool:
         """Check a single website for changes.
         
@@ -219,15 +238,13 @@ class WebsiteMonitor:
             stored_pattern_found = stored_item.get('pattern_found', False)
             
             # Determine if we should trigger based on action
-            change_detected = False
-            if action == 'when-not-found' and stored_pattern_found and not pattern_found:
-                # Pattern was found before but is not found now
-                print(f"  🔔 CHANGE DETECTED: Pattern no longer found!")
-                change_detected = True
-            elif action == 'when-found' and not stored_pattern_found and pattern_found:
-                # Pattern was not found before but is found now
-                print(f"  🔔 CHANGE DETECTED: Pattern now found!")
-                change_detected = True
+            change_detected = self.should_trigger_alert(action, stored_pattern_found, pattern_found)
+            
+            if change_detected:
+                if action == 'when-not-found':
+                    print(f"  🔔 CHANGE DETECTED: Pattern no longer found!")
+                else:
+                    print(f"  🔔 CHANGE DETECTED: Pattern now found!")
             else:
                 print(f"  ✅ No relevant change: pattern is {'found' if pattern_found else 'not found'}")
             
