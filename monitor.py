@@ -11,6 +11,7 @@ This script monitors websites for changes by:
 
 import hashlib
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
@@ -19,6 +20,7 @@ import boto3
 import requests
 import yaml
 from botocore.exceptions import ClientError
+from bs4 import BeautifulSoup
 
 
 class WebsiteMonitor:
@@ -91,6 +93,18 @@ class WebsiteMonitor:
         """
         return hashlib.sha256(content.encode('utf-8')).hexdigest()
 
+    def strip_html(self, content: str) -> str:
+        """Strip HTML tags from content for cleaner text matching.
+        
+        Args:
+            content: HTML content
+            
+        Returns:
+            Plain text content with HTML tags removed
+        """
+        soup = BeautifulSoup(content, 'html.parser')
+        return soup.get_text(separator=' ', strip=True)
+
     def get_stored_checksum(self, jobname: str) -> Optional[Dict]:
         """Retrieve stored checksum from DynamoDB.
         
@@ -108,24 +122,26 @@ class WebsiteMonitor:
             print(f"Error retrieving checksum for {jobname}: {e}")
             return None
 
-    def store_checksum(self, jobname: str, url: str, checksum: str):
+    def store_checksum(self, jobname: str, url: str, checksum: str, pattern_found: Optional[bool] = None):
         """Store checksum in DynamoDB.
         
         Args:
             jobname: Job identifier
             url: URL being monitored
             checksum: SHA-256 checksum of the content
+            pattern_found: Optional boolean indicating if pattern was found (for pattern-based monitoring)
         """
         self._ensure_dynamodb_connection()
         try:
-            self.table.put_item(
-                Item={
-                    'jobname': jobname,
-                    'url': url,
-                    'checksum': checksum,
-                    'datetime': datetime.now(timezone.utc).isoformat()
-                }
-            )
+            item = {
+                'jobname': jobname,
+                'url': url,
+                'checksum': checksum,
+                'datetime': datetime.now(timezone.utc).isoformat()
+            }
+            if pattern_found is not None:
+                item['pattern_found'] = pattern_found
+            self.table.put_item(Item=item)
         except ClientError as e:
             print(f"Error storing checksum for {jobname}: {e}")
 
@@ -133,15 +149,20 @@ class WebsiteMonitor:
         """Check a single website for changes.
         
         Args:
-            job: Job configuration with jobname and url
+            job: Job configuration with jobname, url, and optional pattern/action
             
         Returns:
             True if change detected, False otherwise
         """
         jobname = job['jobname']
         url = job['url']
+        pattern = job.get('pattern')
+        action = job.get('action', 'when-not-found')
         
         print(f"Checking {jobname} ({url})...")
+        if pattern:
+            print(f"  Pattern: {pattern}")
+            print(f"  Action: {action}")
         
         # Fetch current content
         content = self.fetch_page_content(url)
@@ -152,9 +173,56 @@ class WebsiteMonitor:
         # Calculate checksum
         current_checksum = self.calculate_checksum(content)
         
-        # Get stored checksum
+        # Get stored state
         stored_item = self.get_stored_checksum(jobname)
         
+        # Pattern-based monitoring
+        if pattern:
+            # Strip HTML for cleaner matching
+            plain_text = self.strip_html(content)
+            
+            # Check if pattern matches
+            pattern_found = bool(re.search(pattern, plain_text, re.IGNORECASE | re.DOTALL))
+            
+            if stored_item is None:
+                # First time monitoring this website
+                print(f"  ℹ️  First check for {jobname}, pattern {'found' if pattern_found else 'not found'}")
+                self.store_checksum(jobname, url, current_checksum, pattern_found)
+                return False
+            
+            stored_pattern_found = stored_item.get('pattern_found', False)
+            
+            # Determine if we should trigger based on action
+            change_detected = False
+            if action == 'when-not-found' and stored_pattern_found and not pattern_found:
+                # Pattern was found before but is not found now
+                print(f"  🔔 CHANGE DETECTED: Pattern no longer found!")
+                change_detected = True
+            elif action == 'when-found' and not stored_pattern_found and pattern_found:
+                # Pattern was not found before but is found now
+                print(f"  🔔 CHANGE DETECTED: Pattern now found!")
+                change_detected = True
+            else:
+                print(f"  ✅ No relevant change: pattern is {'found' if pattern_found else 'not found'}")
+            
+            # Update stored state
+            self.store_checksum(jobname, url, current_checksum, pattern_found)
+            
+            if change_detected:
+                # Record change
+                self.changes_detected.append({
+                    'jobname': jobname,
+                    'url': url,
+                    'pattern': pattern,
+                    'action': action,
+                    'pattern_found': pattern_found,
+                    'detected_at': datetime.now(timezone.utc).isoformat()
+                })
+                return True
+            
+            return False
+        
+        # Checksum-based monitoring (original behavior)
         if stored_item is None:
             # First time monitoring this website
             print(f"  ℹ️  First check for {jobname}, storing initial checksum")
@@ -200,8 +268,17 @@ class WebsiteMonitor:
                 for change in self.changes_detected:
                     f.write(f"### {change['jobname']}\n")
                     f.write(f"- **URL**: {change['url']}\n")
-                    f.write(f"- **Old Checksum**: `{change['old_checksum']}`\n")
-                    f.write(f"- **New Checksum**: `{change['new_checksum']}`\n")
+                    
+                    # Pattern-based change
+                    if 'pattern' in change:
+                        f.write(f"- **Pattern**: `{change['pattern']}`\n")
+                        f.write(f"- **Action**: {change['action']}\n")
+                        f.write(f"- **Pattern Found**: {change['pattern_found']}\n")
+                    # Checksum-based change
+                    else:
+                        f.write(f"- **Old Checksum**: `{change['old_checksum']}`\n")
+                        f.write(f"- **New Checksum**: `{change['new_checksum']}`\n")
+                    
                     f.write(f"- **Detected At**: {change['detected_at']}\n\n")
             else:
                 f.write("## ✅ No Changes Detected\n\n")

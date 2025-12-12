@@ -4,3 +4,5 @@
 jobs:
   - jobname: mors-100-miles
     url: https://my.raceresult.com/365611/registration
+    pattern: "100\\s+miles\\s+-\\s+waiting\\s+list\\s+0\\s+Available"
+    action: when-not-found

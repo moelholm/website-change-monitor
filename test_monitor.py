@@ -25,6 +25,9 @@ def test_config_loading():
     print(f"  ✓ Loaded {len(jobs)} job(s)")
     for job in jobs:
         print(f"    - {job['jobname']}: {job['url']}")
+        if 'pattern' in job:
+            print(f"      Pattern: {job['pattern']}")
+            print(f"      Action: {job.get('action', 'when-not-found')}")
 
 
 def test_checksum_calculation():
@@ -43,6 +46,48 @@ def test_checksum_calculation():
         checksum = m.calculate_checksum(content)
         assert checksum == expected, f"Checksum mismatch for '{content}'"
         print(f"  ✓ '{content}' -> {checksum}")
+
+
+def test_html_stripping():
+    """Test HTML tag stripping."""
+    print("\nTesting HTML stripping...")
+    m = monitor.WebsiteMonitor()
+    
+    test_cases = [
+        ("<p>Hello</p>", "Hello"),
+        ("<div>Hello <span>World</span></div>", "Hello World"),
+        ("<p>100 miles - \n<b>waiting list</b> 0 Available</p>", "100 miles - waiting list 0 Available"),
+    ]
+    
+    for html, expected_text in test_cases:
+        result = m.strip_html(html)
+        # Normalize whitespace for comparison
+        result_normalized = ' '.join(result.split())
+        expected_normalized = ' '.join(expected_text.split())
+        assert result_normalized == expected_normalized, f"HTML strip mismatch: got '{result}', expected '{expected_text}'"
+        print(f"  ✓ '{html}' -> '{result_normalized}'")
+
+
+def test_pattern_matching():
+    """Test regex pattern matching."""
+    print("\nTesting pattern matching...")
+    import re
+    
+    # Test the specific pattern from the example
+    pattern = r"100\s+miles\s+-\s+waiting\s+list\s+0\s+Available"
+    
+    test_cases = [
+        ("100 miles - waiting list 0 Available", True),
+        ("100 miles -  waiting list  0 Available", True),
+        ("100 miles - \nwaiting list 0 Available", True),
+        ("100 miles - waiting list 1 Available", False),
+        ("200 miles - waiting list 0 Available", False),
+    ]
+    
+    for text, should_match in test_cases:
+        match = bool(re.search(pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"Pattern match mismatch for '{text}'"
+        print(f"  ✓ '{text}' -> {match}")
 
 
 def test_fetch_content():
@@ -69,6 +114,8 @@ def main():
     try:
         test_config_loading()
         test_checksum_calculation()
+        test_html_stripping()
+        test_pattern_matching()
         test_fetch_content()
         
         print("\n" + "=" * 60)
