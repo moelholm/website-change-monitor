@@ -104,6 +104,33 @@ class WebsiteMonitor:
         """
         soup = BeautifulSoup(content, 'html.parser')
         return soup.get_text(separator=' ', strip=True)
+    
+    def normalize_whitespace(self, text: str) -> str:
+        """Normalize Unicode whitespace characters to regular spaces.
+        
+        This ensures that regex patterns using \\s will match consistently,
+        even when the HTML contains special Unicode whitespace like zero-width
+        spaces (U+200B), which are not matched by \\s in regex patterns.
+        
+        Args:
+            text: Text possibly containing Unicode whitespace characters
+            
+        Returns:
+            Text with Unicode whitespace normalized to regular spaces
+        """
+        # Replace zero-width space and other problematic Unicode whitespace
+        # with regular spaces to ensure regex \s patterns work correctly
+        unicode_whitespace = [
+            '\u200b',  # Zero-width space
+            '\u200c',  # Zero-width non-joiner
+            '\u200d',  # Zero-width joiner
+            '\ufeff',  # Zero-width no-break space (BOM)
+        ]
+        
+        for char in unicode_whitespace:
+            text = text.replace(char, ' ')
+        
+        return text
 
     def get_stored_state(self, jobname: str) -> Optional[Dict]:
         """Retrieve stored state from DynamoDB.
@@ -225,6 +252,9 @@ class WebsiteMonitor:
         if pattern:
             # Strip HTML for cleaner matching
             plain_text = self.strip_html(content)
+            
+            # Normalize whitespace to handle Unicode characters like zero-width spaces
+            plain_text = self.normalize_whitespace(plain_text)
             
             # Check if pattern matches
             pattern_found = bool(re.search(pattern, plain_text, re.IGNORECASE | re.DOTALL))

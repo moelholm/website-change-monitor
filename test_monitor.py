@@ -68,6 +68,61 @@ def test_html_stripping():
         print(f"  ✓ '{html}' -> '{result_normalized}'")
 
 
+def test_whitespace_normalization():
+    """Test Unicode whitespace normalization."""
+    print("\nTesting whitespace normalization...")
+    m = monitor.WebsiteMonitor()
+    
+    test_cases = [
+        # Regular spaces should remain unchanged
+        ("100 miles - waiting list", "100 miles - waiting list"),
+        # Zero-width spaces should be replaced with regular spaces
+        ("100\u200bmiles", "100 miles"),
+        # Zero-width non-joiner
+        ("100\u200cmiles", "100 miles"),
+        # Zero-width joiner
+        ("100\u200dmiles", "100 miles"),
+        # Zero-width no-break space (BOM)
+        ("100\ufeffmiles", "100 miles"),
+        # Mixed case
+        ("100\u200bmiles\u200c-\u200dwaiting\ufefflist", "100 miles - waiting list"),
+    ]
+    
+    for input_text, expected in test_cases:
+        result = m.normalize_whitespace(input_text)
+        assert result == expected, f"Normalization mismatch: got '{repr(result)}', expected '{repr(expected)}'"
+        print(f"  ✓ {repr(input_text)} -> {repr(result)}")
+
+
+def test_pattern_matching_with_unicode_whitespace():
+    """Test that pattern matching works with Unicode whitespace after normalization."""
+    print("\nTesting pattern matching with Unicode whitespace...")
+    import re
+    m = monitor.WebsiteMonitor()
+    
+    # The pattern from the config
+    pattern = r"100\s+miles\s+-\s+waiting\s+list\s+0\s+Available"
+    
+    test_cases = [
+        # Regular whitespace - should match
+        ("100 miles - waiting list 0 Available", True),
+        # Zero-width spaces - should match after normalization
+        ("100\u200bmiles\u200b-\u200bwaiting\u200blist\u200b0\u200bAvailable", True),
+        # Mixed Unicode whitespace - should match after normalization
+        ("100\u200bmiles\u200c-\u200dwaiting\ufefflist 0 Available", True),
+        # Wrong number - should not match
+        ("100 miles - waiting list 1 Available", False),
+    ]
+    
+    for text, should_match in test_cases:
+        # Normalize the text like the monitor does
+        normalized = m.normalize_whitespace(text)
+        match = bool(re.search(pattern, normalized, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"Pattern match mismatch for {repr(text)}: got {match}, expected {should_match}"
+        status = "matches" if match else "doesn't match"
+        print(f"  ✓ {repr(text[:50])} {status}")
+
+
 def test_pattern_matching():
     """Test regex pattern matching."""
     print("\nTesting pattern matching...")
@@ -205,6 +260,8 @@ def main():
         test_config_loading()
         test_checksum_calculation()
         test_html_stripping()
+        test_whitespace_normalization()
+        test_pattern_matching_with_unicode_whitespace()
         test_pattern_matching()
         test_pattern_validation()
         test_should_trigger_alert()
