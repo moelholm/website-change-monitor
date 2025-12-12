@@ -26,6 +26,10 @@ from bs4 import BeautifulSoup
 class WebsiteMonitor:
     """Monitor websites for changes using DynamoDB for state tracking."""
 
+    # Pattern validation constants
+    MAX_PATTERN_LENGTH = 500
+    MAX_REPETITION_OPERATORS = 10
+
     def __init__(self, config_file: str = "config.yml", table_name: str = "website-change-monitor"):
         """Initialize the website monitor.
         
@@ -158,16 +162,29 @@ class WebsiteMonitor:
             # Try to compile the pattern
             re.compile(pattern)
             
+            # Prevent overly complex patterns
+            if len(pattern) > self.MAX_PATTERN_LENGTH:
+                print(f"  ⚠️  Warning: Pattern is too long (>{self.MAX_PATTERN_LENGTH} chars)")
+                return False
+            
             # Basic checks for potentially dangerous patterns
             # Prevent excessive repetition patterns that could cause ReDoS
-            if pattern.count('*') > 10 or pattern.count('+') > 10:
+            if pattern.count('*') > self.MAX_REPETITION_OPERATORS or pattern.count('+') > self.MAX_REPETITION_OPERATORS:
                 print(f"  ⚠️  Warning: Pattern contains many repetition operators")
                 return False
             
-            # Prevent overly complex patterns
-            if len(pattern) > 500:
-                print(f"  ⚠️  Warning: Pattern is too long (>500 chars)")
-                return False
+            # Check for nested quantifiers which are classic ReDoS patterns
+            # Patterns like (a+)+, (a*)*, (a*)+, (a+)* are dangerous
+            nested_quantifier_patterns = [
+                r'\([^)]*\+\)\+',  # (x+)+
+                r'\([^)]*\*\)\*',  # (x*)*
+                r'\([^)]*\*\)\+',  # (x*)+
+                r'\([^)]*\+\)\*',  # (x+)*
+            ]
+            for dangerous_pattern in nested_quantifier_patterns:
+                if re.search(dangerous_pattern, pattern):
+                    print(f"  ⚠️  Warning: Pattern contains nested quantifiers (potential ReDoS)")
+                    return False
                 
             return True
         except re.error as e:

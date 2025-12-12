@@ -99,9 +99,13 @@ def test_pattern_validation():
     assert m.validate_pattern(r"100\s+miles"), "Simple pattern should be valid"
     print("  ✓ Simple pattern is valid")
     
-    # Invalid pattern
-    assert not m.validate_pattern(r"(.*)*" * 20), "Pattern with excessive repetition should be invalid"
-    print("  ✓ Dangerous pattern is rejected")
+    # Invalid pattern - nested quantifiers (classic ReDoS)
+    assert not m.validate_pattern(r"(a+)+b"), "Pattern with nested quantifiers should be invalid"
+    print("  ✓ Nested quantifier pattern is rejected")
+    
+    # Invalid pattern - excessive repetition
+    assert not m.validate_pattern(r"a*" * 15), "Pattern with excessive repetition should be invalid"
+    print("  ✓ Excessive repetition pattern is rejected")
     
     # Too long pattern
     assert not m.validate_pattern("a" * 600), "Overly long pattern should be invalid"
