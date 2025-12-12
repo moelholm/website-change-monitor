@@ -17,14 +17,17 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import boto3
-import requests
 import yaml
 from botocore.exceptions import ClientError
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 
 class WebsiteMonitor:
     """Monitor websites for changes using DynamoDB for state tracking."""
+    
+    # Timeout for page navigation in milliseconds
+    PAGE_LOAD_TIMEOUT_MS = 30000
 
     def __init__(self, config_file: str = "config.yml", table_name: str = "website-change-monitor"):
         """Initialize the website monitor.
@@ -63,22 +66,35 @@ class WebsiteMonitor:
             sys.exit(1)
 
     def fetch_page_content(self, url: str) -> Optional[str]:
-        """Fetch the content of a webpage.
+        """Fetch the fully loaded DOM content of a webpage using Playwright.
         
         Args:
             url: URL of the webpage to fetch
             
         Returns:
-            Page content as string, or None if fetch failed
+            Fully loaded page content as string, or None if fetch failed
         """
         try:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (compatible; WebsiteChangeMonitor/1.0; +https://github.com/moelholm/website-change-monitor)'
-            }
-            response = requests.get(url, timeout=30, headers=headers, verify=True)
-            response.raise_for_status()
-            return response.text
-        except requests.RequestException as e:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                try:
+                    context = browser.new_context(
+                        user_agent='Mozilla/5.0 (compatible; WebsiteChangeMonitor/1.0; +https://github.com/moelholm/website-change-monitor)'
+                    )
+                    page = context.new_page()
+                    
+                    # Navigate to the URL and wait for the page to load
+                    page.goto(url, timeout=self.PAGE_LOAD_TIMEOUT_MS, wait_until='networkidle')
+                    
+                    # Get the fully loaded DOM content
+                    content = page.content()
+                    return content
+                finally:
+                    browser.close()
+        except PlaywrightTimeoutError as e:
+            print(f"Error fetching {url}: Timeout - {e}")
+            return None
+        except Exception as e:
             print(f"Error fetching {url}: {e}")
             return None
 
