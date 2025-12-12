@@ -33,9 +33,15 @@ class WebsiteMonitor:
         """
         self.config_file = config_file
         self.table_name = table_name
-        self.dynamodb = boto3.resource('dynamodb')
-        self.table = self.dynamodb.Table(table_name)
+        self.dynamodb = None
+        self.table = None
         self.changes_detected = []
+    
+    def _ensure_dynamodb_connection(self):
+        """Ensure DynamoDB connection is established."""
+        if self.dynamodb is None:
+            self.dynamodb = boto3.resource('dynamodb')
+            self.table = self.dynamodb.Table(self.table_name)
 
     def load_config(self) -> List[Dict[str, str]]:
         """Load job configurations from YAML file.
@@ -91,6 +97,7 @@ class WebsiteMonitor:
         Returns:
             Item dict with checksum and datetime, or None if not found
         """
+        self._ensure_dynamodb_connection()
         try:
             response = self.table.get_item(Key={'jobname': jobname})
             return response.get('Item')
@@ -106,6 +113,7 @@ class WebsiteMonitor:
             url: URL being monitored
             checksum: MD5 checksum of the content
         """
+        self._ensure_dynamodb_connection()
         try:
             self.table.put_item(
                 Item={

@@ -83,19 +83,15 @@ jobs:
             }
             
             const date = new Date().toISOString().split('T')[0];
-            const issueTitle = `🔔 Website Changes Detected - ${date}`;
-            const issueBody = `## Website Change Alert
+            const issueTitle = '🔔 Website Changes Detected - ' + date;
             
-Changes were detected in one or more monitored websites during the scheduled check.
-
-**Workflow Run**: ${context.payload.repository.html_url}/actions/runs/${context.runId}
-
-### Details
-
-${summaryContent}
-
----
-*This issue was automatically created by the Website Change Monitor workflow.*`;
+            const issueBody = '## Website Change Alert\n\n' +
+              'Changes were detected in one or more monitored websites during the scheduled check.\n\n' +
+              '**Workflow Run**: ' + context.payload.repository.html_url + '/actions/runs/' + context.runId + '\n\n' +
+              '### Details\n\n' +
+              summaryContent + '\n\n' +
+              '---\n' +
+              '*This issue was automatically created by the Website Change Monitor workflow.*';
 
             // Create the issue
             const issue = await github.rest.issues.create({
@@ -106,4 +102,4 @@ ${summaryContent}
               labels: ['website-change', 'automated']
             });
             
-            console.log(`Created issue #${issue.data.number}`);
+            console.log('Created issue #' + issue.data.number);
