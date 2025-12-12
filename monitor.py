@@ -204,6 +204,10 @@ class WebsiteMonitor:
         url = job['url']
         pattern = job.get('pattern')
         action = job.get('action', 'when-not-found')
+        valid_actions = {'when-found', 'when-not-found'}
+        if action not in valid_actions:
+            print(f"  ⚠️  Invalid action '{action}' for job '{jobname}'. Must be one of {valid_actions}. Skipping job.")
+            return False
         
         print(f"Checking {jobname} ({url})...")
         if pattern:
