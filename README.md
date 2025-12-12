@@ -49,10 +49,76 @@ Each job requires:
 - `jobname`: Unique identifier for the monitoring job
 - `url`: Full URL of the website to monitor
 
-### AWS IAM Role Permissions
+### GitHub Repository Secrets Setup
 
-The IAM role used by GitHub Actions needs the following permissions:
+To configure the required secrets:
 
+1. Go to your repository **Settings** → **Secrets and variables** → **Actions**
+2. Click **New repository secret**
+3. Add the following secrets:
+
+| Secret Name | Description | Example |
+|-------------|-------------|---------|
+| `AWS_ROLE_ARN` | ARN of the IAM role for GitHub Actions | `arn:aws:iam::123456789012:role/GitHubActionsRole` |
+| `AWS_REGION` | AWS region for DynamoDB | `us-east-1` |
+| `DYNAMODB_TABLE_NAME` | (Optional) DynamoDB table name | `website-change-monitor` |
+
+### Codespace Secrets Setup
+
+For local development in Codespaces, configure these secrets:
+
+1. Go to your **User Settings** → **Codespaces** → **Secrets**
+2. Add the following secrets:
+
+| Secret Name | Description | Example |
+|-------------|-------------|---------|
+| `AWS_SSO_PROFILE` | Your AWS SSO profile name | `codespace-sso` |
+| `AWS_SSO_ACCOUNT` | Your AWS account ID | `123456789012` |
+| `AWS_SSO_ROLE_NAME` | SSO role name | `AdministratorAccess` |
+| `AWS_SSO_REGION` | AWS region | `us-east-1` |
+| `AWS_SSO_START_URL` | AWS SSO start URL | `https://d-xxxxxxxxxx.awsapps.com/start` |
+
+### AWS IAM Role Setup
+
+#### Step 1: Create OIDC Provider in AWS
+
+If you haven't already set up GitHub Actions OIDC provider in your AWS account:
+
+1. Go to **IAM** → **Identity providers** → **Add provider**
+2. Select **OpenID Connect**
+3. Provider URL: `https://token.actions.githubusercontent.com`
+4. Audience: `sts.amazonaws.com`
+5. Click **Add provider**
+
+#### Step 2: Create IAM Role
+
+Create an IAM role with the following configuration:
+
+**Trust Policy:**
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::YOUR_ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+        },
+        "StringLike": {
+          "token.actions.githubusercontent.com:sub": "repo:YOUR_GITHUB_USERNAME/website-change-monitor:*"
+        }
+      }
+    }
+  ]
+}
+```
+
+**Permissions Policy:**
 ```json
 {
   "Version": "2012-10-17",
@@ -70,6 +136,8 @@ The IAM role used by GitHub Actions needs the following permissions:
   ]
 }
 ```
+
+Replace `YOUR_ACCOUNT_ID` and `YOUR_GITHUB_USERNAME` with your actual values.
 
 ## Usage
 
