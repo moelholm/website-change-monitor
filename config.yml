@@ -1,0 +1,9 @@
+# Website Change Monitor Configuration
+# Define websites to monitor for changes
+
+jobs:
+  - jobname: example-website
+    url: https://example.com
+  
+  - jobname: github-status
+    url: https://www.githubstatus.com

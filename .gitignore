@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# AWS
+.aws/
+awscliv2.zip
+
+# Temporary files
+tmp/
+*.tmp
