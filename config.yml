@@ -2,8 +2,8 @@
 # Define websites to monitor for changes
 
 jobs:
-  - jobname: example-website
-    url: https://example.com
+  - jobname: mors-100-miles
+    url: https://my.raceresult.com/365611/registration
   
   - jobname: github-status
     url: https://www.githubstatus.com

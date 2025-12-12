@@ -185,6 +185,22 @@ This repository is configured for GitHub Codespaces with:
 
 Simply open the repository in a Codespace, and the environment will be set up automatically.
 
+#### Logging in to AWS
+
+After opening the Codespace, you need to authenticate with AWS SSO:
+
+```bash
+# Login to AWS SSO
+aws sso login --profile codespace-sso
+
+# Verify you're logged in
+aws sts get-caller-identity --profile codespace-sso
+```
+
+This will open a browser window to complete SSO authentication. Once logged in, you can run the monitor script or interact with AWS resources.
+
+> **Note**: Ensure your Codespace secrets are configured correctly (see [Codespace Secrets Setup](#codespace-secrets-setup)). The `AWS_SSO_ROLE_NAME` must match a role you have access to in AWS IAM Identity Center.
+
 ### Project Structure
 
 ```

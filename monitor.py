@@ -12,7 +12,7 @@ This script monitors websites for changes by:
 import hashlib
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional
 
 import boto3
@@ -123,7 +123,7 @@ class WebsiteMonitor:
                     'jobname': jobname,
                     'url': url,
                     'checksum': checksum,
-                    'datetime': datetime.utcnow().isoformat()
+                    'datetime': datetime.now(timezone.utc).isoformat()
                 }
             )
         except ClientError as e:
@@ -178,7 +178,7 @@ class WebsiteMonitor:
                 'url': url,
                 'old_checksum': stored_checksum,
                 'new_checksum': current_checksum,
-                'detected_at': datetime.utcnow().isoformat()
+                'detected_at': datetime.now(timezone.utc).isoformat()
             })
             
             return True

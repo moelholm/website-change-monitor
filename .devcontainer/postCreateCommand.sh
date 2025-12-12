@@ -11,10 +11,20 @@ pip install -r requirements.txt
 
 # Install AWS CLI
 echo "☁️ Installing AWS CLI..."
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
-rm -rf awscliv2.zip aws/
+
+# Detect the OS and install AWS CLI accordingly
+if grep -qi alpine /etc/os-release 2>/dev/null; then
+    # Alpine Linux - install via pip (the glibc-based binary doesn't work on musl)
+    echo "Detected Alpine Linux, installing AWS CLI via pip..."
+    pip install awscli
+else
+    # Standard Linux with glibc - use the official installer
+    echo "Installing AWS CLI via official installer..."
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+    rm -rf awscliv2.zip aws/
+fi
 
 echo "✅ Environment setup complete!"
 
@@ -59,5 +69,14 @@ else
 
 	chmod 600 "$CONFIG_FILE" || true
 	echo "Wrote AWS SSO config to $CONFIG_FILE"
+
+	# Set default profile and region for boto3/AWS CLI
+	BASHRC="$HOME/.bashrc"
+	echo "" >> "$BASHRC"
+	echo "# AWS defaults for boto3 and AWS CLI" >> "$BASHRC"
+	echo "export AWS_DEFAULT_PROFILE=$PROFILE_NAME" >> "$BASHRC"
+	echo "export AWS_DEFAULT_REGION=$AWS_SSO_REGION" >> "$BASHRC"
+	echo "export AWS_PROFILE=$PROFILE_NAME" >> "$BASHRC"
+	echo "Added AWS_DEFAULT_PROFILE, AWS_PROFILE, and AWS_DEFAULT_REGION to $BASHRC"
 
 fi
