@@ -5,8 +5,10 @@ A GitHub Actions-powered service that monitors websites for changes using AWS Dy
 ## Features
 
 - 🕐 **Automated Monitoring**: Runs every hour via GitHub Actions
-- 🔍 **Change Detection**: Uses SHA-256 checksums to detect content changes
-- 💾 **State Persistence**: Stores checksums in AWS DynamoDB
+- 🔍 **Change Detection**: 
+  - SHA-256 checksums to detect any content changes
+  - Regex pattern matching to detect specific text appearing or disappearing
+- 💾 **State Persistence**: Stores checksums and pattern states in AWS DynamoDB
 - 🔔 **Notifications**: Creates GitHub issues when changes are detected
 - ☁️ **AWS Integration**: Uses OIDC for secure AWS authentication
 - 🛠️ **Codespace Ready**: Pre-configured development environment with AWS CLI
@@ -38,16 +40,26 @@ Edit `config.yml` to define websites to monitor:
 
 ```yaml
 jobs:
+  # Checksum-based monitoring (detects any content change)
   - jobname: example-website
     url: https://example.com
   
-  - jobname: another-site
-    url: https://another-site.com
+  # Pattern-based monitoring (detects when specific text appears or disappears)
+  - jobname: registration-check
+    url: https://my.raceresult.com/365611/registration
+    pattern: "100\\s+miles\\s+-\\s+waiting\\s+list\\s+0\\s+Available"
+    action: when-not-found
 ```
 
 Each job requires:
 - `jobname`: Unique identifier for the monitoring job
 - `url`: Full URL of the website to monitor
+
+Optional fields for pattern-based monitoring:
+- `pattern`: Regular expression to search for in the page content (HTML tags are stripped for cleaner matching)
+- `action`: When to trigger a change notification:
+  - `when-not-found` (default): Trigger when pattern was previously found but is no longer present
+  - `when-found`: Trigger when pattern was not found before but is now present
 
 ### GitHub Repository Secrets Setup
 
@@ -167,11 +179,14 @@ python monitor.py
 
 1. **Configuration Loading**: Reads website jobs from `config.yml`
 2. **Content Fetching**: Downloads each website's content
-3. **Checksum Calculation**: Computes SHA-256 hash of the content
-4. **State Comparison**: Compares with stored checksum in DynamoDB
-5. **Change Detection**: If checksums differ, a change is detected
-6. **Notification**: Creates a GitHub issue with change details
-7. **State Update**: Updates DynamoDB with new checksum
+3. **Change Detection**: Two monitoring modes:
+   - **Checksum Mode**: Computes SHA-256 hash and detects any content change
+   - **Pattern Mode**: Strips HTML tags, searches for regex pattern, and triggers based on action:
+     - `when-not-found`: Alerts when pattern disappears
+     - `when-found`: Alerts when pattern appears
+4. **State Comparison**: Compares with stored state in DynamoDB
+5. **Notification**: Creates a GitHub issue when changes are detected
+6. **State Update**: Updates DynamoDB with new checksum/pattern state
 
 ## Development
 
@@ -225,6 +240,7 @@ The DynamoDB table stores the following attributes:
 - `url` (String): Website URL
 - `checksum` (String): SHA-256 checksum of last known content
 - `datetime` (String): ISO 8601 timestamp of last check
+- `pattern_found` (Boolean, Optional): Whether the pattern was found (for pattern-based monitoring)
 
 ## Troubleshooting
 
