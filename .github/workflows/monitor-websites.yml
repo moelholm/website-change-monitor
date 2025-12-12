@@ -34,9 +34,7 @@ jobs:
       
       - name: Install Playwright browsers
         run: |
-          playwright install chromium
-          playwright install-deps chromium
-
+          playwright install --with-deps chromium
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
