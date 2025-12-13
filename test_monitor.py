@@ -148,6 +148,45 @@ def test_pattern_validation():
         print("  ✓ Malformed pattern is rejected")
 
 
+def test_extract_context():
+    """Test context extraction around pattern matches."""
+    print("\nTesting context extraction...")
+    m = monitor.WebsiteMonitor()
+    
+    # Test with pattern found
+    text = "This is some text before the 100 miles - waiting list 0 Available marker and this is text after it."
+    pattern = r"100\s+miles\s+-\s+waiting\s+list\s+0\s+Available"
+    context = m.extract_context(text, pattern, context_chars=20)
+    assert context is not None, "Context should be found"
+    assert "100 miles" in context, "Context should contain pattern"
+    print(f"  ✓ Extracted context: '{context[:60]}...'")
+    
+    # Test with pattern not found
+    context = m.extract_context(text, r"not\s+found", context_chars=20)
+    assert context is None, "Context should be None when pattern not found"
+    print("  ✓ Returns None when pattern not found")
+
+
+def test_content_preview():
+    """Test content preview generation."""
+    print("\nTesting content preview...")
+    m = monitor.WebsiteMonitor()
+    
+    # Test with short content
+    html = "<html><body><p>Short content</p></body></html>"
+    preview = m.get_content_preview(html, max_length=100)
+    assert "Short content" in preview, "Preview should contain text"
+    assert len(preview) <= 100, "Preview should not exceed max length"
+    print(f"  ✓ Short content preview: '{preview}'")
+    
+    # Test with long content
+    long_html = "<html><body><p>" + ("Long content " * 100) + "</p></body></html>"
+    preview = m.get_content_preview(long_html, max_length=50)
+    assert len(preview) <= 54, "Preview should be truncated (50 + '...')"  # Allow for '...'
+    assert preview.endswith("..."), "Long content should end with ellipsis"
+    print(f"  ✓ Long content preview: '{preview[:40]}...'")
+
+
 def test_should_trigger_alert():
     """Test the should_trigger_alert helper method."""
     print("\nTesting should_trigger_alert logic...")
@@ -247,6 +286,8 @@ def main():
         test_html_stripping()
         test_pattern_matching()
         test_pattern_validation()
+        test_extract_context()
+        test_content_preview()
         test_should_trigger_alert()
         test_action_validation()
         test_fetch_content()
