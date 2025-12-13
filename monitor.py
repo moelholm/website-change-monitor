@@ -344,12 +344,6 @@ class WebsiteMonitor:
             summary_content += "## ✅ No Changes Detected\n\n"
             summary_content += "All monitored websites remain unchanged.\n"
         
-        # Write to GitHub Actions step summary
-        summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
-        if summary_file:
-            with open(summary_file, 'a', encoding='utf-8') as f:
-                f.write(summary_content)
-        
         # Print summary to stdout for workflow to capture
         print("\n" + "="*60)
         print("SUMMARY_OUTPUT_START")

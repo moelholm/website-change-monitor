@@ -79,6 +79,9 @@ jobs:
             /^=\+$/d
             p
           }' monitor_output.txt > summary.txt
+          
+          # Also write summary to GitHub Actions step summary for UI display
+          cat summary.txt >> $GITHUB_STEP_SUMMARY
 
       - name: Create GitHub issue for changes
         if: steps.monitor.outputs.has_changes == 'true'
