@@ -182,7 +182,7 @@ def test_content_preview():
     # Test with long content
     long_html = "<html><body><p>" + ("Long content " * 100) + "</p></body></html>"
     preview = m.get_content_preview(long_html, max_length=50)
-    assert len(preview) <= 54, "Preview should be truncated (50 + '...')"  # Allow for '...'
+    assert len(preview) <= 53, "Preview should be truncated (50 + '...')"  # 50 chars + 3 for '...'
     assert preview.endswith("..."), "Long content should end with ellipsis"
     print(f"  ✓ Long content preview: '{preview[:40]}...'")
 
