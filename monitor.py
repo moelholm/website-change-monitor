@@ -316,7 +316,7 @@ class WebsiteMonitor:
             return False
 
     def create_summary_output(self):
-        """Create GitHub Actions step summary with results."""
+        """Print monitoring results summary to stdout with delimiters for workflow capture."""
         # Build the summary content
         summary_content = "# Website Change Monitor Results\n\n"
         
