@@ -10,5 +10,5 @@ jobs:
   
   - jobname: moelholm-workout
     url: https://moelholm.com
-    pattern: "8\\s+x\\s+600m\\s+with\\s+400m\\s+Recovery"
+    pattern: "so\\s+first\\s+a\\s+nice\\s+cinema\\s+trip\\s+🍿"
     action: when-text-disappears

@@ -90,15 +90,16 @@ def test_pattern_matching():
         print(f"  ✓ '{text}' -> {match}")
     
     # Test the moelholm workout pattern
-    workout_pattern = r"8\s+x\s+600m\s+with\s+400m\s+Recovery"
+    workout_pattern = r"so\s+first\s+a\s+nice\s+cinema\s+trip\s+🍿"
     
     workout_test_cases = [
-        ("8 x 600m with 400m Recovery", True),
-        ("8  x  600m  with  400m  Recovery", True),
-        ("8 x 600m with \n400m Recovery", True),
-        ("8x600m with 400m Recovery", False),  # No space after 8
-        ("10 x 600m with 400m Recovery", False),  # Different number
-        ("8 x 800m with 400m Recovery", False),  # Different distance
+        ("so first a nice cinema trip 🍿", True),
+        ("so  first  a  nice  cinema  trip  🍿", True),
+        ("so first a nice cinema trip \n🍿", True),
+        ("so  first   a   nice   cinema   trip   🍿", True),
+        ("sofirst a nice cinema trip 🍿", False),  # No space after so
+        ("so first nice cinema trip 🍿", False),  # Missing "a"
+        ("so last a nice cinema trip 🍿", False),  # Different word
     ]
     
     for text, should_match in workout_test_cases:
