@@ -68,20 +68,24 @@ jobs:
         continue-on-error: true
         env:
           DYNAMODB_TABLE_NAME: ${{ secrets.DYNAMODB_TABLE_NAME || 'website-change-monitor' }}
+          SUMMARY_FILE: summary.txt
         run: |
           python monitor.py
 
       - name: Create GitHub issue for changes
         if: steps.monitor.outputs.has_changes == 'true'
+        env:
+          SUMMARY_FILE: summary.txt
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             
             // Read the summary file created by the monitor
+            const summaryFile = process.env.SUMMARY_FILE || 'summary.txt';
             let summaryContent = '';
             try {
-              summaryContent = fs.readFileSync('summary.txt', 'utf8');
+              summaryContent = fs.readFileSync(summaryFile, 'utf8');
             } catch (error) {
               console.log('Could not read summary file: ' + error.message);
             }
