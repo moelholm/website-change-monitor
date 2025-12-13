@@ -27,7 +27,7 @@ def test_config_loading():
         print(f"    - {job['jobname']}: {job['url']}")
         if 'pattern' in job:
             print(f"      Pattern: {job['pattern']}")
-            print(f"      Action: {job.get('action', 'when-not-found')}")
+            print(f"      Action: {job.get('action', 'when-text-disappears')}")
 
 
 def test_checksum_calculation():
@@ -130,19 +130,19 @@ def test_should_trigger_alert():
     print("\nTesting should_trigger_alert logic...")
     m = monitor.WebsiteMonitor()
     
-    # Test 'when-not-found' action
-    assert m.should_trigger_alert('when-not-found', True, False) == True, "Should trigger when pattern disappears"
-    assert m.should_trigger_alert('when-not-found', False, False) == False, "Should not trigger when pattern stays absent"
-    assert m.should_trigger_alert('when-not-found', True, True) == False, "Should not trigger when pattern stays present"
-    assert m.should_trigger_alert('when-not-found', False, True) == False, "Should not trigger when pattern appears"
-    print("  ✓ 'when-not-found' action logic correct")
+    # Test 'when-text-disappears' action
+    assert m.should_trigger_alert('when-text-disappears', True, False) == True, "Should trigger when pattern disappears"
+    assert m.should_trigger_alert('when-text-disappears', False, False) == False, "Should not trigger when pattern stays absent"
+    assert m.should_trigger_alert('when-text-disappears', True, True) == False, "Should not trigger when pattern stays present"
+    assert m.should_trigger_alert('when-text-disappears', False, True) == False, "Should not trigger when pattern appears"
+    print("  ✓ 'when-text-disappears' action logic correct")
     
-    # Test 'when-found' action
-    assert m.should_trigger_alert('when-found', False, True) == True, "Should trigger when pattern appears"
-    assert m.should_trigger_alert('when-found', True, True) == False, "Should not trigger when pattern stays present"
-    assert m.should_trigger_alert('when-found', False, False) == False, "Should not trigger when pattern stays absent"
-    assert m.should_trigger_alert('when-found', True, False) == False, "Should not trigger when pattern disappears"
-    print("  ✓ 'when-found' action logic correct")
+    # Test 'when-text-appears' action
+    assert m.should_trigger_alert('when-text-appears', False, True) == True, "Should trigger when pattern appears"
+    assert m.should_trigger_alert('when-text-appears', True, True) == False, "Should not trigger when pattern stays present"
+    assert m.should_trigger_alert('when-text-appears', False, False) == False, "Should not trigger when pattern stays absent"
+    assert m.should_trigger_alert('when-text-appears', True, False) == False, "Should not trigger when pattern disappears"
+    print("  ✓ 'when-text-appears' action logic correct")
     
     # Test invalid action
     assert m.should_trigger_alert('invalid', True, False) == False, "Invalid action should not trigger"
@@ -183,13 +183,13 @@ def test_action_validation():
         print("  ✓ Empty action is rejected")
         
         # Test valid actions work (should not raise errors)
-        invalid_action_job['action'] = 'when-found'
+        invalid_action_job['action'] = 'when-text-appears'
         result = m.check_website(invalid_action_job)
-        print("  ✓ Valid action 'when-found' is accepted")
+        print("  ✓ Valid action 'when-text-appears' is accepted")
         
-        invalid_action_job['action'] = 'when-not-found'
+        invalid_action_job['action'] = 'when-text-disappears'
         result = m.check_website(invalid_action_job)
-        print("  ✓ Valid action 'when-not-found' is accepted")
+        print("  ✓ Valid action 'when-text-disappears' is accepted")
         
     finally:
         m.fetch_page_content = original_fetch
