@@ -1,0 +1,22 @@
+Checking test (https://example.com)...
+  🔔 CHANGE DETECTED for test!
+     Old checksum: old123
+     New checksum: c7b4b4bdc01d3aa5fe925211e36faeb721a2d8e12094e1185b215646559af18a
+
+============================================================
+SUMMARY_OUTPUT_START
+============================================================
+# Website Change Monitor Results
+
+## 🔔 1 Change(s) Detected
+
+### test
+- **URL**: [https://example.com](https://example.com)
+- **Monitoring Type**: checksum
+- **Old Checksum**: `old123`
+- **New Checksum**: `c7b4b4bdc01d3aa5fe925211e36faeb721a2d8e12094e1185b215646559af18a`
+- **Detected At**: 2025-12-13T16:50:28.627708+00:00
+
+============================================================
+SUMMARY_OUTPUT_END
+============================================================
