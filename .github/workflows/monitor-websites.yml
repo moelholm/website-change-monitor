@@ -103,7 +103,8 @@ jobs:
               repo: context.repo.repo,
               title: issueTitle,
               body: issueBody,
-              labels: ['website-change', 'automated']
+              labels: ['website-change', 'automated'],
+              assignees: [context.repo.owner]
             });
             
             console.log('Created issue #' + issue.data.number);
