@@ -69,7 +69,19 @@ jobs:
         env:
           DYNAMODB_TABLE_NAME: ${{ secrets.DYNAMODB_TABLE_NAME || 'website-change-monitor' }}
         run: |
-          python monitor.py
+          # Run monitor and capture full output
+          python monitor.py | tee monitor_output.txt
+          
+          # Extract summary section from output and save to file
+          sed -n '/SUMMARY_OUTPUT_START/,/SUMMARY_OUTPUT_END/{
+            /SUMMARY_OUTPUT_START/d
+            /SUMMARY_OUTPUT_END/d
+            /^=\+$/d
+            p
+          }' monitor_output.txt > summary.txt
+          
+          # Also write summary to GitHub Actions step summary for UI display
+          cat summary.txt >> $GITHUB_STEP_SUMMARY
 
       - name: Create GitHub issue for changes
         if: steps.monitor.outputs.has_changes == 'true'
@@ -78,12 +90,12 @@ jobs:
           script: |
             const fs = require('fs');
             
-            // Read the step summary to get change details
+            // Read the summary file created by the workflow
             let summaryContent = '';
             try {
-              summaryContent = fs.readFileSync(process.env.GITHUB_STEP_SUMMARY, 'utf8');
+              summaryContent = fs.readFileSync('summary.txt', 'utf8');
             } catch (error) {
-              console.log('Could not read step summary');
+              console.log('Could not read summary file: ' + error.message);
             }
             
             const date = new Date().toISOString().split('T')[0];

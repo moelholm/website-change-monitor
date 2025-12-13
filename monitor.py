@@ -316,37 +316,42 @@ class WebsiteMonitor:
             return False
 
     def create_summary_output(self):
-        """Create GitHub Actions step summary with results."""
-        summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
-        if not summary_file:
-            return
+        """Print monitoring results summary to stdout with delimiters for workflow capture."""
+        # Build the summary content
+        summary_content = "# Website Change Monitor Results\n\n"
         
-        with open(summary_file, 'a', encoding='utf-8') as f:
-            f.write("# Website Change Monitor Results\n\n")
-            
-            if self.changes_detected:
-                f.write(f"## 🔔 {len(self.changes_detected)} Change(s) Detected\n\n")
-                for change in self.changes_detected:
-                    f.write(f"### {change['jobname']}\n")
-                    f.write(f"- **URL**: {change['url']}\n")
-                    
-                    monitoring_type = change.get('monitoring_type', 'checksum')
-                    f.write(f"- **Monitoring Type**: {monitoring_type}\n")
-                    
-                    # Pattern-based change
-                    if monitoring_type == 'pattern':
-                        f.write(f"- **Pattern**: `{change['pattern']}`\n")
-                        f.write(f"- **Action**: {change['action']}\n")
-                        f.write(f"- **Pattern Found**: {change['pattern_found']}\n")
-                    # Checksum-based change
-                    elif monitoring_type == 'checksum':
-                        f.write(f"- **Old Checksum**: `{change['old_checksum']}`\n")
-                        f.write(f"- **New Checksum**: `{change['new_checksum']}`\n")
-                    
-                    f.write(f"- **Detected At**: {change['detected_at']}\n\n")
-            else:
-                f.write("## ✅ No Changes Detected\n\n")
-                f.write("All monitored websites remain unchanged.\n")
+        if self.changes_detected:
+            summary_content += f"## 🔔 {len(self.changes_detected)} Change(s) Detected\n\n"
+            for change in self.changes_detected:
+                summary_content += f"### {change['jobname']}\n"
+                summary_content += f"- **URL**: [{change['url']}]({change['url']})\n"
+                
+                monitoring_type = change.get('monitoring_type', 'checksum')
+                summary_content += f"- **Monitoring Type**: {monitoring_type}\n"
+                
+                # Pattern-based change
+                if monitoring_type == 'pattern':
+                    summary_content += f"- **Pattern**: `{change['pattern']}`\n"
+                    summary_content += f"- **Action**: {change['action']}\n"
+                    summary_content += f"- **Pattern Found**: {change['pattern_found']}\n"
+                # Checksum-based change
+                elif monitoring_type == 'checksum':
+                    summary_content += f"- **Old Checksum**: `{change['old_checksum']}`\n"
+                    summary_content += f"- **New Checksum**: `{change['new_checksum']}`\n"
+                
+                summary_content += f"- **Detected At**: {change['detected_at']}\n\n"
+        else:
+            summary_content += "## ✅ No Changes Detected\n\n"
+            summary_content += "All monitored websites remain unchanged.\n"
+        
+        # Print summary to stdout for workflow to capture
+        print("\n" + "="*60)
+        print("SUMMARY_OUTPUT_START")
+        print("="*60)
+        print(summary_content, end='')
+        print("="*60)
+        print("SUMMARY_OUTPUT_END")
+        print("="*60)
 
     def set_output(self, name: str, value: str):
         """Set GitHub Actions output variable."""
