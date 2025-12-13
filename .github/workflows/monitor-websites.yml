@@ -78,12 +78,12 @@ jobs:
           script: |
             const fs = require('fs');
             
-            // Read the step summary to get change details
+            // Read the summary file created by the monitor
             let summaryContent = '';
             try {
-              summaryContent = fs.readFileSync(process.env.GITHUB_STEP_SUMMARY, 'utf8');
+              summaryContent = fs.readFileSync('summary.txt', 'utf8');
             } catch (error) {
-              console.log('Could not read step summary');
+              console.log('Could not read summary file: ' + error.message);
             }
             
             const date = new Date().toISOString().split('T')[0];

@@ -32,6 +32,7 @@ awscliv2.zip
 # Temporary files
 tmp/
 *.tmp
+summary.txt
 
 # Test files (keep in repo for documentation)
 # test_monitor.py is included for reference
