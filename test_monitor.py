@@ -105,6 +105,29 @@ def test_pattern_matching():
         match = bool(re.search(workout_pattern, text, re.IGNORECASE | re.DOTALL))
         assert match == should_match, f"Workout pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
+    
+    # Test the moelholm badwater 135 pattern
+    badwater_pattern = r"December\s+12th\s+·\s+Fri\s+17:39\s+.*?I\s+watched\s+.Badwater\s+135."
+    
+    badwater_test_cases = [
+        ('December 12th · Fri 17:39  I watched "Badwater 135"', True),
+        ('December 12th · Fri 17:39   I watched "Badwater 135"', True),  # Multiple spaces
+        ('December 12th · Fri 17:39 Some text here I watched "Badwater 135"', True),  # Text between
+        ('December 12th · Fri 17:39\nI watched "Badwater 135"', True),  # Newline after time
+        ("December 12th · Fri 17:39 I watched 'Badwater 135'", True),  # Single quotes (relaxed)
+        ('December 12th · Fri 17:39 I watched xBadwater 135x', True),  # Any char instead of quotes
+        ('December  12th  ·  Fri  17:39  I watched "Badwater 135"', True),  # Multiple spaces everywhere
+        ('December 12th · Fri 17:39 🏃🏻‍♂️ 🌋\n🐘\n🎬🍿I watched "Badwater 135"', True),  # Emojis and newlines
+        ('December 12th · Fri 17:40 I watched "Badwater 135"', False),  # Wrong time
+        ('December 11th · Fri 17:39 I watched "Badwater 135"', False),  # Wrong day
+        ('December 12th · Fri 17:39 I ran "Badwater 135"', False),  # "ran" instead of "watched"
+        ('December 12th · Fri 17:39 I watched "Badwater 100"', False),  # Wrong race number
+    ]
+    
+    for text, should_match in badwater_test_cases:
+        match = bool(re.search(badwater_pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"Badwater pattern match mismatch for '{text}'"
+        print(f"  ✓ '{text}' -> {match}")
 
 
 def test_pattern_validation():
