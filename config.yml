@@ -10,5 +10,5 @@ jobs:
   
   - jobname: moelholm-workout
     url: https://moelholm.com
-    pattern: "below\\s+in\\s+the\\s+regex"
+    pattern: "so\\s+first\\s+a\\s+nice\\s+cinema\\s+trip\\s+🍿"
     action: when-text-disappears

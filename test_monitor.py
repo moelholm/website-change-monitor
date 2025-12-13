@@ -90,16 +90,16 @@ def test_pattern_matching():
         print(f"  ✓ '{text}' -> {match}")
     
     # Test the moelholm workout pattern
-    workout_pattern = r"below\s+in\s+the\s+regex"
+    workout_pattern = r"so\s+first\s+a\s+nice\s+cinema\s+trip\s+🍿"
     
     workout_test_cases = [
-        ("below in the regex", True),
-        ("below  in  the  regex", True),
-        ("below in \nthe regex", True),
-        ("below  in   the   regex", True),
-        ("belowin the regex", False),  # No space after below
-        ("below the regex", False),  # Missing "in"
-        ("above in the regex", False),  # Different word
+        ("so first a nice cinema trip 🍿", True),
+        ("so  first  a  nice  cinema  trip  🍿", True),
+        ("so first a nice cinema trip \n🍿", True),
+        ("so  first   a   nice   cinema   trip   🍿", True),
+        ("sofirst a nice cinema trip 🍿", False),  # No space after so
+        ("so first nice cinema trip 🍿", False),  # Missing "a"
+        ("so last a nice cinema trip 🍿", False),  # Different word
     ]
     
     for text, should_match in workout_test_cases:
