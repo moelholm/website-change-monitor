@@ -12,8 +12,3 @@ jobs:
     url: https://moelholm.com
     pattern: "8\\s+x\\s+600m\\s+with\\s+400m\\s+Recovery"
     action: when-text-disappears
-  
-  - jobname: moelholm-badwater-135
-    url: https://moelholm.com
-    pattern: "December\\s+12th\\s+·\\s+Fri\\s+17:39\\s+.*?I\\s+watched\\s+.Badwater\\s+135."
-    action: when-text-disappears
