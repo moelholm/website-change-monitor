@@ -34,6 +34,8 @@ tmp/
 *.tmp
 summary.txt
 monitor_output.txt
+test_output.txt
+extracted.txt
 
 # Test files (keep in repo for documentation)
 # test_monitor.py is included for reference
