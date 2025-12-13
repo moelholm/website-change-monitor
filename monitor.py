@@ -181,59 +181,6 @@ class WebsiteMonitor:
             print(f"  ⚠️  Invalid regex pattern: {e}")
             return False
 
-    def extract_context(self, text: str, pattern: str, context_chars: int = 300) -> Optional[str]:
-        """Extract context around a pattern match.
-        
-        Args:
-            text: Text to search in
-            pattern: Regular expression pattern
-            context_chars: Number of characters to include before and after match
-            
-        Returns:
-            Text excerpt with pattern highlighted, or None if pattern not found
-        """
-        match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
-        if not match:
-            return None
-        
-        start_pos = match.start()
-        end_pos = match.end()
-        
-        # Extract context before and after
-        context_start = max(0, start_pos - context_chars)
-        context_end = min(len(text), end_pos + context_chars)
-        
-        # Get the excerpt
-        excerpt = text[context_start:context_end]
-        
-        # Add ellipsis if we're not at the start/end
-        if context_start > 0:
-            excerpt = "..." + excerpt
-        if context_end < len(text):
-            excerpt = excerpt + "..."
-        
-        return excerpt.strip()
-
-    def get_content_preview(self, content: str, max_length: int = 500) -> str:
-        """Get a preview of the content (for display in issues).
-        
-        Args:
-            content: Full content
-            max_length: Maximum length of preview
-            
-        Returns:
-            Preview of content with HTML stripped
-        """
-        plain_text = self.strip_html(content)
-        
-        # Take first max_length characters
-        if len(plain_text) > max_length:
-            preview = plain_text[:max_length] + "..."
-        else:
-            preview = plain_text
-        
-        return preview.strip()
-
     def should_trigger_alert(self, action: str, stored_pattern_found: bool, current_pattern_found: bool) -> bool:
         """Determine if a pattern change should trigger an alert.
         
@@ -301,11 +248,6 @@ class WebsiteMonitor:
             # Check if pattern matches
             pattern_found = bool(re.search(pattern, plain_text, re.IGNORECASE | re.DOTALL))
             
-            # Extract context if pattern is currently found
-            context = None
-            if pattern_found:
-                context = self.extract_context(plain_text, pattern)
-            
             if stored_item is None:
                 # First time monitoring this website
                 print(f"  ℹ️  First check for {jobname}, pattern {'found' if pattern_found else 'not found'}")
@@ -329,8 +271,8 @@ class WebsiteMonitor:
             self.store_state(jobname, url, current_checksum, pattern_found)
             
             if change_detected:
-                # Record change with context
-                change_info = {
+                # Record change
+                self.changes_detected.append({
                     'jobname': jobname,
                     'url': url,
                     'monitoring_type': 'pattern',
@@ -338,13 +280,7 @@ class WebsiteMonitor:
                     'action': action,
                     'pattern_found': pattern_found,
                     'detected_at': datetime.now(timezone.utc).isoformat()
-                }
-                
-                # Add context if pattern appeared
-                if pattern_found and context:
-                    change_info['context'] = context
-                
-                self.changes_detected.append(change_info)
+                })
                 return True
             
             return False
@@ -364,9 +300,6 @@ class WebsiteMonitor:
             print(f"     Old checksum: {stored_checksum}")
             print(f"     New checksum: {current_checksum}")
             
-            # Get a content preview for the issue
-            content_preview = self.get_content_preview(content)
-            
             # Update stored checksum
             self.store_state(jobname, url, current_checksum)
             
@@ -377,7 +310,6 @@ class WebsiteMonitor:
                 'monitoring_type': 'checksum',
                 'old_checksum': stored_checksum,
                 'new_checksum': current_checksum,
-                'content_preview': content_preview,
                 'detected_at': datetime.now(timezone.utc).isoformat()
             })
             
@@ -395,7 +327,7 @@ class WebsiteMonitor:
             summary_content += f"## 🔔 {len(self.changes_detected)} Change(s) Detected\n\n"
             for change in self.changes_detected:
                 summary_content += f"### {change['jobname']}\n"
-                summary_content += f"- **URL**: {change['url']}\n"
+                summary_content += f"- **URL**: [{change['url']}]({change['url']})\n"
                 
                 monitoring_type = change.get('monitoring_type', 'checksum')
                 summary_content += f"- **Monitoring Type**: {monitoring_type}\n"
@@ -405,18 +337,10 @@ class WebsiteMonitor:
                     summary_content += f"- **Pattern**: `{change['pattern']}`\n"
                     summary_content += f"- **Action**: {change['action']}\n"
                     summary_content += f"- **Pattern Found**: {change['pattern_found']}\n"
-                    
-                    # Show context if available
-                    if 'context' in change:
-                        summary_content += f"\n**Content Context:**\n```\n{change['context']}\n```\n\n"
                 # Checksum-based change
                 elif monitoring_type == 'checksum':
                     summary_content += f"- **Old Checksum**: `{change['old_checksum']}`\n"
                     summary_content += f"- **New Checksum**: `{change['new_checksum']}`\n"
-                    
-                    # Show content preview if available
-                    if 'content_preview' in change:
-                        summary_content += f"\n**Current Content Preview:**\n```\n{change['content_preview']}\n```\n\n"
                 
                 summary_content += f"- **Detected At**: {change['detected_at']}\n\n"
         else:
