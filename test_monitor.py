@@ -117,6 +117,7 @@ def test_pattern_matching():
         ("December 12th · Fri 17:39 I watched 'Badwater 135'", True),  # Single quotes (relaxed)
         ('December 12th · Fri 17:39 I watched xBadwater 135x', True),  # Any char instead of quotes
         ('December  12th  ·  Fri  17:39  I watched "Badwater 135"', True),  # Multiple spaces everywhere
+        ('December 12th · Fri 17:39 🏃🏻‍♂️ 🌋\n🐘\n🎬🍿I watched "Badwater 135"', True),  # Emojis and newlines
         ('December 12th · Fri 17:40 I watched "Badwater 135"', False),  # Wrong time
         ('December 11th · Fri 17:39 I watched "Badwater 135"', False),  # Wrong day
         ('December 12th · Fri 17:39 I ran "Badwater 135"', False),  # "ran" instead of "watched"
