@@ -182,17 +182,17 @@ class WebsiteMonitor:
         """Determine if a pattern change should trigger an alert.
         
         Args:
-            action: Action type ('when-found' or 'when-not-found')
+            action: Action type ('when-text-appears' or 'when-text-disappears')
             stored_pattern_found: Whether pattern was found in previous check
             current_pattern_found: Whether pattern is found in current check
             
         Returns:
             True if alert should be triggered, False otherwise
         """
-        if action == 'when-not-found':
+        if action == 'when-text-disappears':
             # Trigger when pattern was found before but is not found now
             return stored_pattern_found and not current_pattern_found
-        elif action == 'when-found':
+        elif action == 'when-text-appears':
             # Trigger when pattern was not found before but is found now
             return not stored_pattern_found and current_pattern_found
         return False
@@ -209,8 +209,8 @@ class WebsiteMonitor:
         jobname = job['jobname']
         url = job['url']
         pattern = job.get('pattern')
-        action = job.get('action', 'when-not-found')
-        valid_actions = {'when-found', 'when-not-found'}
+        action = job.get('action', 'when-text-disappears')
+        valid_actions = {'when-text-appears', 'when-text-disappears'}
         if action not in valid_actions:
             print(f"  ⚠️  Invalid action '{action}' for job '{jobname}'. Must be one of {valid_actions}. Skipping job.")
             return False
@@ -257,7 +257,7 @@ class WebsiteMonitor:
             change_detected = self.should_trigger_alert(action, stored_pattern_found, pattern_found)
             
             if change_detected:
-                if action == 'when-not-found':
+                if action == 'when-text-disappears':
                     print(f"  🔔 CHANGE DETECTED: Pattern no longer found!")
                 else:
                     print(f"  🔔 CHANGE DETECTED: Pattern now found!")

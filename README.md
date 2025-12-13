@@ -5,14 +5,14 @@ A GitHub Actions-powered service that monitors websites for changes using AWS Dy
 ## Features
 
 - 🕐 **Automated Monitoring**: Runs every hour via GitHub Actions
-- 🌐 **JavaScript Support**: Uses Playwright to fetch fully loaded DOM (JavaScript-rendered content)
-- 🔍 **Change Detection**: 
-  - SHA-256 checksums to detect any content changes
-  - Regex pattern matching to detect specific text appearing or disappearing
-- 💾 **State Persistence**: Stores checksums and pattern states in AWS DynamoDB
+- 🌐 **JavaScript Support**: Uses Playwright to render JavaScript-heavy pages
+- 🔍 **Flexible Detection**: 
+  - Checksum mode: Detect any content change
+  - Pattern mode: Detect specific text appearing or disappearing
+- 💾 **State Persistence**: AWS DynamoDB stores previous states
 - 🔔 **Notifications**: Creates GitHub issues when changes are detected
-- ☁️ **AWS Integration**: Uses OIDC for secure AWS authentication
-- 🛠️ **Codespace Ready**: Pre-configured development environment with AWS CLI
+- ☁️ **Secure AWS Integration**: OIDC authentication (no stored credentials)
+- 🛠️ **Codespace Ready**: Pre-configured development environment
 
 ## Setup
 
@@ -41,34 +41,33 @@ Edit `config.yml` to define websites to monitor:
 
 ```yaml
 jobs:
-  # Checksum-based monitoring (detects any content change)
+  # Checksum mode: Detects any content change
   - jobname: example-website
     url: https://example.com
   
-  # Pattern-based monitoring (detects when specific text appears or disappears)
+  # Pattern mode: Detects when specific text appears or disappears
   - jobname: registration-check
     url: https://my.raceresult.com/365611/registration
     pattern: "100\\s+miles\\s+-\\s+waiting\\s+list\\s+0\\s+Available"
-    action: when-not-found
+    action: when-text-disappears
 ```
 
-Each job requires:
-- `jobname`: Unique identifier for the monitoring job
-- `url`: Full URL of the website to monitor
+**Required fields:**
+- `jobname`: Unique identifier
+- `url`: Website URL to monitor
 
-Optional fields for pattern-based monitoring:
-- `pattern`: Regular expression to search for in the page content (HTML tags are stripped for cleaner matching)
-- `action`: When to trigger a change notification:
-  - `when-not-found` (default): Trigger when pattern was previously found but is no longer present
-  - `when-found`: Trigger when pattern was not found before but is now present
+**Pattern mode fields:**
+- `pattern`: Regular expression to search for (HTML tags are stripped before matching)
+- `action`: When to trigger an alert
+  - `when-text-disappears` (default): Alert when pattern disappears
+  - `when-text-appears`: Alert when pattern appears
 
-### GitHub Repository Secrets Setup
+### GitHub Secrets Setup
 
-To configure the required secrets:
+Configure secrets in your repository:
 
-1. Go to your repository **Settings** → **Secrets and variables** → **Actions**
-2. Click **New repository secret**
-3. Add the following secrets:
+1. Navigate to **Settings** → **Secrets and variables** → **Actions**
+2. Click **New repository secret** and add:
 
 | Secret Name | Description | Example |
 |-------------|-------------|---------|
@@ -76,12 +75,12 @@ To configure the required secrets:
 | `AWS_REGION` | AWS region for DynamoDB | `us-east-1` |
 | `DYNAMODB_TABLE_NAME` | (Optional) DynamoDB table name | `website-change-monitor` |
 
-### Codespace Secrets Setup
+### Codespace Secrets (Optional)
 
-For local development in Codespaces, configure these secrets:
+For development in Codespaces:
 
-1. Go to your **User Settings** → **Codespaces** → **Secrets**
-2. Add the following secrets:
+1. Navigate to **User Settings** → **Codespaces** → **Secrets**
+2. Add these secrets:
 
 | Secret Name | Description | Example |
 |-------------|-------------|---------|
@@ -156,66 +155,48 @@ Replace `YOUR_ACCOUNT_ID` and `YOUR_GITHUB_USERNAME` with your actual values.
 
 ### Automatic Monitoring
 
-The workflow runs automatically every hour. You can also trigger it manually:
+The workflow runs every hour automatically. To trigger manually:
 
-1. Go to **Actions** tab in your repository
-2. Select **Monitor Websites** workflow
+1. Open the **Actions** tab
+2. Select **Monitor Websites**
 3. Click **Run workflow**
 
-### Manual Testing
+### Local Testing
 
 ```bash
-# Install dependencies
 pip install -r requirements.txt
-
-# Configure AWS credentials
 aws configure  # or use AWS SSO
-
-# Run the monitor
 export DYNAMODB_TABLE_NAME=website-change-monitor
 python monitor.py
 ```
 
 ## How It Works
 
-1. **Configuration Loading**: Reads website jobs from `config.yml`
-2. **Content Fetching**: Uses Playwright to fetch fully loaded DOM (including JavaScript-rendered content)
-3. **Change Detection**: Two monitoring modes:
-   - **Checksum Mode**: Computes SHA-256 hash and detects any content change
-   - **Pattern Mode**: Strips HTML tags, searches for regex pattern, and triggers based on action:
-     - `when-not-found`: Alerts when pattern disappears
-     - `when-found`: Alerts when pattern appears
-4. **State Comparison**: Compares with stored state in DynamoDB
-5. **Notification**: Creates a GitHub issue when changes are detected
-6. **State Update**: Updates DynamoDB with new checksum/pattern state
+1. **Load Configuration**: Read website jobs from `config.yml`
+2. **Fetch Content**: Use Playwright to render the full page (including JavaScript)
+3. **Detect Changes**:
+   - **Checksum Mode**: Compute SHA-256 hash and compare with previous state
+   - **Pattern Mode**: Strip HTML tags, search for regex pattern, and trigger alerts based on action:
+     - `when-text-disappears`: Alert when pattern disappears
+     - `when-text-appears`: Alert when pattern appears
+4. **Compare State**: Check against stored state in DynamoDB
+5. **Create Alert**: Generate GitHub issue for detected changes
+6. **Update State**: Store new checksum/pattern state in DynamoDB
 
 ## Development
 
 ### Using GitHub Codespaces
 
-This repository is configured for GitHub Codespaces with:
-- Python 3.12
-- AWS CLI pre-installed
-- Automatic AWS SSO configuration
-- All required dependencies
+This repository is pre-configured for GitHub Codespaces with Python 3.12, AWS CLI, and all dependencies.
 
-Simply open the repository in a Codespace, and the environment will be set up automatically.
-
-#### Logging in to AWS
-
-After opening the Codespace, you need to authenticate with AWS SSO:
+After opening a Codespace, authenticate with AWS SSO:
 
 ```bash
-# Login to AWS SSO
 aws sso login --profile codespace-sso
-
-# Verify you're logged in
-aws sts get-caller-identity --profile codespace-sso
+aws sts get-caller-identity --profile codespace-sso  # Verify
 ```
 
-This will open a browser window to complete SSO authentication. Once logged in, you can run the monitor script or interact with AWS resources.
-
-> **Note**: Ensure your Codespace secrets are configured correctly (see [Codespace Secrets Setup](#codespace-secrets-setup)). The `AWS_SSO_ROLE_NAME` must match a role you have access to in AWS IAM Identity Center.
+> **Note**: Configure [Codespace secrets](#codespace-secrets-optional) before opening the Codespace. The `AWS_SSO_ROLE_NAME` must match a role in your AWS IAM Identity Center.
 
 ### Project Structure
 
@@ -233,32 +214,23 @@ This will open a browser window to complete SSO authentication. Once logged in, 
 └── README.md                       # This file
 ```
 
-## DynamoDB Table Schema
+## DynamoDB Schema
 
-The DynamoDB table stores the following attributes:
-
-- `jobname` (String, Partition Key): Unique job identifier
-- `url` (String): Website URL
-- `checksum` (String): SHA-256 checksum of last known content
-- `datetime` (String): ISO 8601 timestamp of last check
-- `pattern_found` (Boolean, Optional): Whether the pattern was found (for pattern-based monitoring)
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `jobname` | String (PK) | Unique job identifier |
+| `url` | String | Website URL |
+| `checksum` | String | SHA-256 hash of last content |
+| `datetime` | String | ISO 8601 timestamp |
+| `pattern_found` | Boolean | Pattern state (pattern mode only) |
 
 ## Troubleshooting
 
-### Table Creation Fails
+**Table creation fails**: Ensure IAM role has `dynamodb:CreateTable` permission.
 
-Ensure your IAM role has `dynamodb:CreateTable` permission.
+**Authentication errors**: Verify OIDC provider, IAM trust policy, and repository secrets are configured correctly.
 
-### Authentication Errors
-
-Verify that:
-- OIDC provider is correctly configured in AWS
-- IAM role trust policy allows GitHub Actions
-- Repository secrets are set correctly
-
-### No Changes Detected
-
-The first run initializes checksums. Changes are only detected on subsequent runs.
+**No changes detected**: First run initializes state. Changes are detected on subsequent runs.
 
 ## License
 
