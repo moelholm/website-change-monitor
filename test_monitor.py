@@ -88,6 +88,23 @@ def test_pattern_matching():
         match = bool(re.search(pattern, text, re.IGNORECASE | re.DOTALL))
         assert match == should_match, f"Pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
+    
+    # Test the moelholm workout pattern
+    workout_pattern = r"8\s+x\s+600m\s+with\s+400m\s+Recovery"
+    
+    workout_test_cases = [
+        ("8 x 600m with 400m Recovery", True),
+        ("8  x  600m  with  400m  Recovery", True),
+        ("8 x 600m with \n400m Recovery", True),
+        ("8x600m with 400m Recovery", False),  # No space after 8
+        ("10 x 600m with 400m Recovery", False),  # Different number
+        ("8 x 800m with 400m Recovery", False),  # Different distance
+    ]
+    
+    for text, should_match in workout_test_cases:
+        match = bool(re.search(workout_pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"Workout pattern match mismatch for '{text}'"
+        print(f"  ✓ '{text}' -> {match}")
 
 
 def test_pattern_validation():
