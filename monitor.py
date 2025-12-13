@@ -28,9 +28,6 @@ class WebsiteMonitor:
     
     # Timeout for page navigation in milliseconds
     PAGE_LOAD_TIMEOUT_MS = 30000
-    
-    # Summary file for persisting results across GitHub Actions steps
-    SUMMARY_FILE = 'summary.txt'
 
     def __init__(self, config_file: str = "config.yml", table_name: str = "website-change-monitor"):
         """Initialize the website monitor.
@@ -353,9 +350,14 @@ class WebsiteMonitor:
             with open(summary_file, 'a', encoding='utf-8') as f:
                 f.write(summary_content)
         
-        # Also write to a persistent file for the issue creation step
-        with open(self.SUMMARY_FILE, 'w', encoding='utf-8') as f:
-            f.write(summary_content)
+        # Print summary to stdout for workflow to capture
+        print("\n" + "="*60)
+        print("SUMMARY_OUTPUT_START")
+        print("="*60)
+        print(summary_content, end='')
+        print("="*60)
+        print("SUMMARY_OUTPUT_END")
+        print("="*60)
 
     def set_output(self, name: str, value: str):
         """Set GitHub Actions output variable."""
