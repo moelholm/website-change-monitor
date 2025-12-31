@@ -106,6 +106,24 @@ def test_pattern_matching():
         match = bool(re.search(workout_pattern, text, re.IGNORECASE | re.DOTALL))
         assert match == should_match, f"Workout pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
+    
+    # Test the raceresult pattern
+    raceresult_pattern = r"Sorry,\s+no\s+entries\s+found\."
+    
+    raceresult_test_cases = [
+        ("Sorry, no entries found.", True),
+        ("Sorry,  no  entries  found.", True),
+        ("Sorry, no entries \nfound.", True),
+        ("Sorry,   no   entries   found.", True),
+        ("Sorry, no entries found!", False),  # Different punctuation
+        ("Sorry no entries found.", False),   # Missing comma
+        ("Sorry, some entries found.", False),  # Different word
+    ]
+    
+    for text, should_match in raceresult_test_cases:
+        match = bool(re.search(raceresult_pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"Raceresult pattern match mismatch for '{text}'"
+        print(f"  ✓ '{text}' -> {match}")
 
 
 def test_pattern_validation():

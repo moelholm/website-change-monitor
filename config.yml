@@ -12,3 +12,8 @@ jobs:
     url: https://moelholm.com
     pattern: "so\\s+first\\s+a\\s+nice\\s+cinema\\s+trip\\s+🍿"
     action: when-text-disappears
+  
+  - jobname: raceresult-312645
+    url: https://my.raceresult.com/312645/results
+    pattern: "Sorry,\\s+no\\s+entries\\s+found\\."
+    action: when-text-disappears
