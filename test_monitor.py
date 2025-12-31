@@ -89,22 +89,22 @@ def test_pattern_matching():
         assert match == should_match, f"Pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
     
-    # Test the moelholm workout pattern
-    workout_pattern = r"so\s+first\s+a\s+nice\s+cinema\s+trip\s+🍿"
+    # Test the raceresult pattern
+    raceresult_pattern = r"Sorry,\s+no\s+entries\s+found\."
     
-    workout_test_cases = [
-        ("so first a nice cinema trip 🍿", True),
-        ("so  first  a  nice  cinema  trip  🍿", True),
-        ("so first a nice cinema trip \n🍿", True),
-        ("so  first   a   nice   cinema   trip   🍿", True),
-        ("sofirst a nice cinema trip 🍿", False),  # No space after so
-        ("so first nice cinema trip 🍿", False),  # Missing "a"
-        ("so last a nice cinema trip 🍿", False),  # Different word
+    raceresult_test_cases = [
+        ("Sorry, no entries found.", True),
+        ("Sorry,  no  entries  found.", True),
+        ("Sorry, no entries \nfound.", True),
+        ("Sorry,   no   entries   found.", True),
+        ("Sorry, no entries found!", False),  # Different punctuation
+        ("Sorry no entries found.", False),   # Missing comma
+        ("Sorry, some entries found.", False),  # Different word
     ]
     
-    for text, should_match in workout_test_cases:
-        match = bool(re.search(workout_pattern, text, re.IGNORECASE | re.DOTALL))
-        assert match == should_match, f"Workout pattern match mismatch for '{text}'"
+    for text, should_match in raceresult_test_cases:
+        match = bool(re.search(raceresult_pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"Raceresult pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
 
 

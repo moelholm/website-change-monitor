@@ -8,7 +8,7 @@ jobs:
     pattern: "100\\s+miles\\s+-\\s+waiting\\s+list\\s+0\\s+Available"
     action: when-text-disappears
   
-  - jobname: moelholm-workout
-    url: https://moelholm.com
-    pattern: "so\\s+first\\s+a\\s+nice\\s+cinema\\s+trip\\s+🍿"
+  - jobname: raceresult-312645
+    url: https://my.raceresult.com/312645/results
+    pattern: "Sorry,\\s+no\\s+entries\\s+found\\."
     action: when-text-disappears
