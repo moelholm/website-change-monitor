@@ -56,7 +56,7 @@ def test_html_stripping():
     test_cases = [
         ("<p>Hello</p>", "Hello"),
         ("<div>Hello <span>World</span></div>", "Hello World"),
-        ("<p>100 miles - \n<b>waiting list</b> 0 Available</p>", "100 miles - waiting list 0 Available"),
+        ("<p>38\t<b>Nicky Mølholm</b></p>", "38 Nicky Mølholm"),
     ]
     
     for html, expected_text in test_cases:
@@ -74,20 +74,21 @@ def test_pattern_matching():
     import re
     
     # Test the specific pattern from the example
-    pattern = r"100\s+miles\s+-\s+waiting\s+list\s+0\s+Available"
+    pattern = r"38\s+Nicky\s+Mølholm"
     
     test_cases = [
-        ("100 miles - waiting list 0 Available", True),
-        ("100 miles -  waiting list  0 Available", True),
-        ("100 miles - \nwaiting list 0 Available", True),
-        ("100 miles - waiting list 1 Available", False),
-        ("200 miles - waiting list 0 Available", False),
+        ("38 Nicky Mølholm", True),
+        ("38\tNicky\tMølholm", True),             # Tab characters (as on the participants page)
+        ("38  Nicky  Mølholm", True),              # Multiple spaces
+        ("38 Nicky \nMølholm", True),              # Newline
+        ("39 Nicky Mølholm", False),               # Different number
+        ("38 Nicky Molholm", False),               # Missing ø
     ]
     
     for text, should_match in test_cases:
         match = bool(re.search(pattern, text, re.IGNORECASE | re.DOTALL))
         assert match == should_match, f"Pattern match mismatch for '{text}'"
-        print(f"  ✓ '{text}' -> {match}")
+        print(f"  ✓ {repr(text)} -> {match}")
     
     # Test the raceresult pattern
     raceresult_pattern = r"Sorry,\s+no\s+entries\s+found\."
