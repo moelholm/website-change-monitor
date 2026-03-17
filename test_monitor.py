@@ -73,23 +73,31 @@ def test_pattern_matching():
     print("\nTesting pattern matching...")
     import re
     
-    # Test the specific pattern from the example
-    pattern = r"38\s+Nicky\s+Mølholm"
-    
-    test_cases = [
-        ("38 Nicky Mølholm", True),
-        ("38\tNicky\tMølholm", True),             # Tab characters (as on the participants page)
-        ("38  Nicky  Mølholm", True),              # Multiple spaces
-        ("38 Nicky \nMølholm", True),              # Newline
-        ("39 Nicky Mølholm", False),               # Different number
-        ("38 Nicky Molholm", False),               # Missing ø
+    # Test the mors waiting list patterns
+    mors_patterns = [
+        (r"Karoline\s+Stenderup", "Karoline Stenderup"),
+        (r"Kurt\s+Andersen", "Kurt Andersen"),
+        (r"Erik\s+Havnerås", "Erik Havnerås"),
+        (r"Fionnuala\s+O'Mara", "Fionnuala O'Mara"),
+        (r"Martin\s+Larsen", "Martin Larsen"),
+        (r"Jimmi\s+Mikkelsen", "Jimmi Mikkelsen"),
     ]
-    
-    for text, should_match in test_cases:
-        match = bool(re.search(pattern, text, re.IGNORECASE | re.DOTALL))
-        assert match == should_match, f"Pattern match mismatch for '{text}'"
-        print(f"  ✓ {repr(text)} -> {match}")
-    
+
+    for pattern, full_name in mors_patterns:
+        first, last = full_name.split(" ", 1)
+        test_cases = [
+            (full_name, True),
+            (f"{first}\t{last}", True),    # Tab characters (as on the participants page)
+            (f"{first}  {last}", True),    # Multiple spaces
+            (f"{first} \n{last}", True),   # Newline
+            (f"X{first} {last}", True),    # Prefix (still matches)
+            ("Someone Else", False),       # Different name
+        ]
+        for text, should_match in test_cases:
+            match = bool(re.search(pattern, text, re.IGNORECASE | re.DOTALL))
+            assert match == should_match, f"Pattern '{pattern}' match mismatch for '{text}'"
+        print(f"  ✓ pattern '{pattern}' passes all cases")
+
     # Test the raceresult pattern
     raceresult_pattern = r"Sorry,\s+no\s+entries\s+found\."
     
