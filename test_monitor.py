@@ -98,6 +98,23 @@ def test_pattern_matching():
             assert match == should_match, f"Pattern '{pattern}' match mismatch for '{text}'"
         print(f"  ✓ pattern '{pattern}' passes all cases")
 
+    # Test the sportstiming pattern
+    sportstiming_pattern = r"Åbner\s+om"
+
+    sportstiming_test_cases = [
+        ("Åbner om 3 dage", True),
+        ("Åbner  om  3  dage", True),
+        ("Åbner\nom", True),
+        ("åbner om lidt", True),           # lowercase - IGNORECASE matches
+        ("Registration open", False),
+        ("Lukker om 3 dage", False),       # different word
+    ]
+
+    for text, should_match in sportstiming_test_cases:
+        match = bool(re.search(sportstiming_pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"Sportstiming pattern match mismatch for '{text}'"
+        print(f"  ✓ '{text}' -> {match}")
+
     # Test the raceresult pattern
     raceresult_pattern = r"Sorry,\s+no\s+entries\s+found\."
     

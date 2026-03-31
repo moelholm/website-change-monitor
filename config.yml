@@ -37,3 +37,8 @@ jobs:
     url: https://my.raceresult.com/312645/results
     pattern: "Sorry,\\s+no\\s+entries\\s+found\\."
     action: when-text-disappears
+
+  - jobname: sportstiming-18288
+    url: https://www.sportstiming.dk/event/18288
+    pattern: "Åbner\\s+om"
+    action: when-text-disappears
