@@ -99,13 +99,13 @@ def test_pattern_matching():
         print(f"  ✓ pattern '{pattern}' passes all cases")
 
     # Test the sportstiming pattern
-    sportstiming_pattern = r"Åbner\s+om"
+    sportstiming_pattern = r"åbner"
 
     sportstiming_test_cases = [
         ("Åbner om 3 dage", True),
-        ("Åbner  om  3  dage", True),
-        ("Åbner\nom", True),
-        ("åbner om lidt", True),           # lowercase - IGNORECASE matches
+        ("åbner om lidt", True),           # lowercase
+        ("åbner snart", True),             # matches without 'om'
+        ("ÅBNER", True),                   # uppercase - IGNORECASE matches
         ("Registration open", False),
         ("Lukker om 3 dage", False),       # different word
     ]
