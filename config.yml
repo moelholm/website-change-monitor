@@ -40,5 +40,5 @@ jobs:
 
   - jobname: sportstiming-18288
     url: https://www.sportstiming.dk/event/18288
-    pattern: "Åbner\\s+om"
+    pattern: "åbner"
     action: when-text-disappears
