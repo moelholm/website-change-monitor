@@ -42,3 +42,8 @@ jobs:
     url: https://www.sportstiming.dk/event/18288
     pattern: "åbner"
     action: when-text-disappears
+
+  - jobname: raceresult-341254-registration
+    url: https://my.raceresult.com/341254/registration
+    pattern: "Registration\\s+opens"
+    action: when-text-disappears

@@ -133,6 +133,23 @@ def test_pattern_matching():
         assert match == should_match, f"Raceresult pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
 
+    # Test the raceresult registration pattern
+    registration_pattern = r"Registration\s+opens"
+
+    registration_test_cases = [
+        ("Registration opens", True),
+        ("Registration   opens", True),
+        ("Registration \nopens", True),
+        ("registration opens soon", True),
+        ("Registration closed", False),
+        ("Opens for registration", False),
+    ]
+
+    for text, should_match in registration_test_cases:
+        match = bool(re.search(registration_pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"Registration pattern match mismatch for '{text}'"
+        print(f"  ✓ '{text}' -> {match}")
+
 
 def test_pattern_validation():
     """Test pattern validation."""
