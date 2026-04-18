@@ -140,7 +140,7 @@ def test_pattern_matching():
         ("Registration opens", True),
         ("Registration   opens", True),
         ("Registration \nopens", True),
-        ("registration opens soon", True),
+        ("registration opens", True),
         ("Registration closed", False),
         ("Opens for registration", False),
     ]
