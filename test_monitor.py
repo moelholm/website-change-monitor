@@ -150,6 +150,23 @@ def test_pattern_matching():
         assert match == should_match, f"Registration pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
 
+    # Test the gomu48world registration date pattern
+    gomu48world_pattern = r"Registration\s+opens\s+01/08/2026"
+
+    gomu48world_test_cases = [
+        ("Registration opens 01/08/2026", True),
+        ("Registration   opens   01/08/2026", True),
+        ("Registration \nopens \n01/08/2026", True),
+        ("registration opens 01/08/2026", True),
+        ("Registration opens 02/08/2026", False),
+        ("Registration closed 01/08/2026", False),
+    ]
+
+    for text, should_match in gomu48world_test_cases:
+        match = bool(re.search(gomu48world_pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"gomu48world pattern match mismatch for '{text}'"
+        print(f"  ✓ '{text}' -> {match}")
+
 
 def test_pattern_validation():
     """Test pattern validation."""
