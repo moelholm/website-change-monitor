@@ -15,6 +15,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import monitor
 
 
+def get_job(jobname):
+    """Return a configured monitoring job by name."""
+    jobs = monitor.WebsiteMonitor().load_config()
+    return next(job for job in jobs if job["jobname"] == jobname)
+
+
 def test_config_loading():
     """Test configuration loading."""
     print("Testing configuration loading...")
@@ -165,6 +171,24 @@ def test_pattern_matching():
     for text, should_match in gomu48world_test_cases:
         match = bool(re.search(gomu48world_pattern, text, re.IGNORECASE | re.DOTALL))
         assert match == should_match, f"gomu48world pattern match mismatch for '{text}'"
+        print(f"  ✓ '{text}' -> {match}")
+
+    # Test the HYROX ticket sales pattern from config
+    hyrox_job = get_job("hyrox-copenhagen-ticket-sales")
+    hyrox_pattern = hyrox_job["pattern"]
+
+    hyrox_test_cases = [
+        ("TICKET SALES START SOON", True),
+        ("TICKET   SALES   START   SOON", True),
+        ("TICKET \nSALES \nSTART \nSOON", True),
+        ("ticket sales start soon", True),
+        ("TICKET SALES ARE LIVE", False),
+        ("SALES START SOON", False),
+    ]
+
+    for text, should_match in hyrox_test_cases:
+        match = bool(re.search(hyrox_pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"HYROX pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
 
 
