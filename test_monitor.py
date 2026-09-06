@@ -15,6 +15,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import monitor
 
 
+def get_job(jobname):
+    """Return a configured monitoring job by name."""
+    jobs = monitor.WebsiteMonitor().load_config()
+    return next(job for job in jobs if job["jobname"] == jobname)
+
+
 def test_config_loading():
     """Test configuration loading."""
     print("Testing configuration loading...")
@@ -168,7 +174,7 @@ def test_pattern_matching():
         print(f"  ✓ '{text}' -> {match}")
 
     # Test the HYROX ticket sales pattern from config
-    hyrox_job = next(job for job in monitor.WebsiteMonitor().load_config() if job["jobname"] == "hyrox-copenhagen-ticket-sales")
+    hyrox_job = get_job("hyrox-copenhagen-ticket-sales")
     hyrox_pattern = hyrox_job["pattern"]
 
     hyrox_test_cases = [
