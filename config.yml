@@ -52,3 +52,8 @@ jobs:
     url: https://my.raceresult.com/341254/registration
     pattern: "Registration\\s+opens\\s+01/08/2026"
     action: when-text-disappears
+
+  - jobname: hyrox-copenhagen-ticket-sales
+    url: https://hyrox.com/event/hyrox-copenhagen/
+    pattern: "TICKET\\s+SALES\\s+START\\s+SOON"
+    action: when-text-disappears

@@ -167,6 +167,23 @@ def test_pattern_matching():
         assert match == should_match, f"gomu48world pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
 
+    # Test the HYROX ticket sales pattern
+    hyrox_pattern = r"TICKET\s+SALES\s+START\s+SOON"
+
+    hyrox_test_cases = [
+        ("TICKET SALES START SOON", True),
+        ("TICKET   SALES   START   SOON", True),
+        ("TICKET \nSALES \nSTART \nSOON", True),
+        ("ticket sales start soon", True),
+        ("TICKET SALES ARE LIVE", False),
+        ("SALES START SOON", False),
+    ]
+
+    for text, should_match in hyrox_test_cases:
+        match = bool(re.search(hyrox_pattern, text, re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"HYROX pattern match mismatch for '{text}'"
+        print(f"  ✓ '{text}' -> {match}")
+
 
 def test_pattern_validation():
     """Test pattern validation."""
