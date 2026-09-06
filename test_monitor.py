@@ -167,8 +167,9 @@ def test_pattern_matching():
         assert match == should_match, f"gomu48world pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
 
-    # Test the HYROX ticket sales pattern
-    hyrox_pattern = r"TICKET\s+SALES\s+START\s+SOON"
+    # Test the HYROX ticket sales pattern from config
+    hyrox_job = next(job for job in monitor.WebsiteMonitor().load_config() if job["jobname"] == "hyrox-copenhagen-ticket-sales")
+    hyrox_pattern = hyrox_job["pattern"]
 
     hyrox_test_cases = [
         ("TICKET SALES START SOON", True),
