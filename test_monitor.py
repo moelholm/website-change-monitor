@@ -191,6 +191,24 @@ def test_pattern_matching():
         assert match == should_match, f"HYROX pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
 
+    hyrox_season_job = get_job("hyrox-copenhagen-season-26-27-ticket-sales")
+    assert hyrox_season_job["url"] == "https://denmark.hyrox.com/event/hyrox-copenhagen-season-26-27-akawdf"
+    assert hyrox_season_job["action"] == "when-text-disappears"
+    m = monitor.WebsiteMonitor()
+    for html, should_match in [
+        ("<p>Sale starts soon</p>", True),
+        ("<p>Sale   starts\nsoon</p>", True),
+        ("<p>SALE STARTS SOON</p>", True),
+        ("<p>Sale <span>starts</span> soon</p>", True),
+        ("<p>Tickets available now</p>", False),
+        ("<p>Sale starts</p>", False),
+    ]:
+        match = bool(re.search(hyrox_season_job["pattern"], m.strip_html(html), re.IGNORECASE | re.DOTALL))
+        assert match == should_match, f"HYROX season 26–27 pattern match mismatch for '{html}'"
+        assert m.should_trigger_alert(hyrox_season_job["action"], True, match) == (not should_match)
+        assert not m.should_trigger_alert(hyrox_season_job["action"], False, match)
+        print(f"  ✓ '{html}' -> {match}")
+
 
 def test_pattern_validation():
     """Test pattern validation."""
