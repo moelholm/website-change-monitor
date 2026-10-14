@@ -57,3 +57,8 @@ jobs:
     url: https://hyrox.com/event/hyrox-copenhagen/
     pattern: "TICKET\\s+SALES\\s+START\\s+SOON"
     action: when-text-disappears
+
+  - jobname: hyrox-copenhagen-season-26-27-ticket-sales
+    url: https://denmark.hyrox.com/event/hyrox-copenhagen-season-26-27-akawdf
+    pattern: "Sale\\s+starts\\s+soon"
+    action: when-text-disappears
