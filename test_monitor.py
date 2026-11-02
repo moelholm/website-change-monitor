@@ -173,41 +173,38 @@ def test_pattern_matching():
         assert match == should_match, f"gomu48world pattern match mismatch for '{text}'"
         print(f"  ✓ '{text}' -> {match}")
 
-    # Test the HYROX ticket sales pattern from config
-    hyrox_job = get_job("hyrox-copenhagen-ticket-sales")
-    hyrox_pattern = hyrox_job["pattern"]
+def test_configured_monitors():
+    """Test active monitor configuration and case-insensitive pattern matching."""
+    print("\nTesting configured monitors...")
+    jobs = {job["jobname"]: job for job in monitor.WebsiteMonitor().load_config()}
 
-    hyrox_test_cases = [
-        ("TICKET SALES START SOON", True),
-        ("TICKET   SALES   START   SOON", True),
-        ("TICKET \nSALES \nSTART \nSOON", True),
-        ("ticket sales start soon", True),
-        ("TICKET SALES ARE LIVE", False),
-        ("SALES START SOON", False),
+    assert set(jobs) == {
+        "hotelskansen-kullamannen-package",
+        "utmb-kullamannen-ultra-100-miles-sold-out",
+    }
+    assert jobs["hotelskansen-kullamannen-package"]["url"] == "https://hotelskansen.se/erbjudanden-paket/"
+    assert jobs["hotelskansen-kullamannen-package"]["pattern"] == "Kullamannen"
+    assert jobs["hotelskansen-kullamannen-package"]["action"] == "when-text-appears"
+    assert jobs["utmb-kullamannen-ultra-100-miles-sold-out"]["url"] == "https://kullamannen.utmb.world/races/ultra-100-miles"
+    assert jobs["utmb-kullamannen-ultra-100-miles-sold-out"]["pattern"] == r"sold\s+out"
+    assert jobs["utmb-kullamannen-ultra-100-miles-sold-out"]["action"] == "when-text-disappears"
+
+    test_cases = [
+        ("hotelskansen-kullamannen-package", "<p>kullamannen</p>", False, True),
+        ("hotelskansen-kullamannen-package", "<p>KULLAMANNEN</p>", True, False),
+        ("utmb-kullamannen-ultra-100-miles-sold-out", "<p>SOLD OUT</p>", True, False),
+        ("utmb-kullamannen-ultra-100-miles-sold-out", "<p>Tickets available</p>", True, True),
     ]
 
-    for text, should_match in hyrox_test_cases:
-        match = bool(re.search(hyrox_pattern, text, re.IGNORECASE | re.DOTALL))
-        assert match == should_match, f"HYROX pattern match mismatch for '{text}'"
-        print(f"  ✓ '{text}' -> {match}")
+    for jobname, content, stored_pattern_found, expected_change in test_cases:
+        m = monitor.WebsiteMonitor()
+        m.fetch_page_content = lambda url, content=content: content
+        m.get_stored_state = lambda name, found=stored_pattern_found: {"pattern_found": found}
+        m.store_state = lambda *args, **kwargs: None
 
-    hyrox_season_job = get_job("hyrox-copenhagen-season-26-27-ticket-sales")
-    assert hyrox_season_job["url"] == "https://denmark.hyrox.com/event/hyrox-copenhagen-season-26-27-akawdf"
-    assert hyrox_season_job["action"] == "when-text-disappears"
-    m = monitor.WebsiteMonitor()
-    for html, should_match in [
-        ("<p>Sale starts soon</p>", True),
-        ("<p>Sale   starts\nsoon</p>", True),
-        ("<p>SALE STARTS SOON</p>", True),
-        ("<p>Sale <span>starts</span> soon</p>", True),
-        ("<p>Tickets available now</p>", False),
-        ("<p>Sale starts</p>", False),
-    ]:
-        match = bool(re.search(hyrox_season_job["pattern"], m.strip_html(html), re.IGNORECASE | re.DOTALL))
-        assert match == should_match, f"HYROX season 26–27 pattern match mismatch for '{html}'"
-        assert m.should_trigger_alert(hyrox_season_job["action"], True, match) == (not should_match)
-        assert not m.should_trigger_alert(hyrox_season_job["action"], False, match)
-        print(f"  ✓ '{html}' -> {match}")
+        result = m.check_website(jobs[jobname])
+        assert result == expected_change, f"Unexpected result for {jobname} with content '{content}'"
+        print(f"  ✓ {jobname} with '{content}' -> change={result}")
 
 
 def test_pattern_validation():
@@ -326,6 +323,7 @@ def main():
         test_checksum_calculation()
         test_html_stripping()
         test_pattern_matching()
+        test_configured_monitors()
         test_pattern_validation()
         test_should_trigger_alert()
         test_action_validation()
