@@ -2,63 +2,12 @@
 # Define websites to monitor for changes
 
 jobs:
-  - jobname: mors-karoline-stenderup
-    url: https://my.raceresult.com/365611/participants#2_FDE373
-    # Note: In YAML double-quoted strings, backslashes must be escaped as \\, so \\s here means \s in the actual regex.
-    pattern: "Karoline\\s+Stenderup"
-    action: when-text-disappears
+  - jobname: hotelskansen-kullamannen-package
+    url: https://hotelskansen.se/erbjudanden-paket/
+    pattern: "Kullamannen"
+    action: when-text-appears
 
-  - jobname: mors-kurt-andersen
-    url: https://my.raceresult.com/365611/participants#2_FDE373
-    pattern: "Kurt\\s+Andersen"
-    action: when-text-disappears
-
-  - jobname: mors-erik-havneraas
-    url: https://my.raceresult.com/365611/participants#2_FDE373
-    pattern: "Erik\\s+Havnerås"
-    action: when-text-disappears
-
-  - jobname: mors-fionnuala-omara
-    url: https://my.raceresult.com/365611/participants#2_FDE373
-    pattern: "Fionnuala\\s+O'Mara"
-    action: when-text-disappears
-
-  - jobname: mors-martin-larsen
-    url: https://my.raceresult.com/365611/participants#2_FDE373
-    pattern: "Martin\\s+Larsen"
-    action: when-text-disappears
-
-  - jobname: mors-jimmi-mikkelsen
-    url: https://my.raceresult.com/365611/participants#2_FDE373
-    pattern: "Jimmi\\s+Mikkelsen"
-    action: when-text-disappears
-  
-  - jobname: raceresult-312645
-    url: https://my.raceresult.com/312645/results
-    pattern: "Sorry,\\s+no\\s+entries\\s+found\\."
-    action: when-text-disappears
-
-  - jobname: sportstiming-18288
-    url: https://www.sportstiming.dk/event/18288
-    pattern: "åbner"
-    action: when-text-disappears
-
-  - jobname: raceresult-341254-48h-world-championship-registration
-    url: https://my.raceresult.com/341254/registration
-    pattern: "Registration\\s+opens"
-    action: when-text-disappears
-
-  - jobname: gomu48world
-    url: https://my.raceresult.com/341254/registration
-    pattern: "Registration\\s+opens\\s+01/08/2026"
-    action: when-text-disappears
-
-  - jobname: hyrox-copenhagen-ticket-sales
-    url: https://hyrox.com/event/hyrox-copenhagen/
-    pattern: "TICKET\\s+SALES\\s+START\\s+SOON"
-    action: when-text-disappears
-
-  - jobname: hyrox-copenhagen-season-26-27-ticket-sales
-    url: https://denmark.hyrox.com/event/hyrox-copenhagen-season-26-27-akawdf
-    pattern: "Sale\\s+starts\\s+soon"
+  - jobname: utmb-kullamannen-ultra-100-miles-sold-out
+    url: https://kullamannen.utmb.world/races/ultra-100-miles
+    pattern: "sold\\s+out"
     action: when-text-disappears
