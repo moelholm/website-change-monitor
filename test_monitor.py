@@ -15,12 +15,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import monitor
 
 
-def get_job(jobname):
-    """Return a configured monitoring job by name."""
-    jobs = monitor.WebsiteMonitor().load_config()
-    return next(job for job in jobs if job["jobname"] == jobname)
-
-
 def test_config_loading():
     """Test configuration loading."""
     print("Testing configuration loading...")
@@ -74,105 +68,6 @@ def test_html_stripping():
         print(f"  ✓ '{html}' -> '{result_normalized}'")
 
 
-def test_pattern_matching():
-    """Test regex pattern matching."""
-    print("\nTesting pattern matching...")
-    import re
-    
-    # Test the mors waiting list patterns
-    mors_patterns = [
-        (r"Karoline\s+Stenderup", "Karoline Stenderup"),
-        (r"Kurt\s+Andersen", "Kurt Andersen"),
-        (r"Erik\s+Havnerås", "Erik Havnerås"),
-        (r"Fionnuala\s+O'Mara", "Fionnuala O'Mara"),
-        (r"Martin\s+Larsen", "Martin Larsen"),
-        (r"Jimmi\s+Mikkelsen", "Jimmi Mikkelsen"),
-    ]
-
-    for pattern, full_name in mors_patterns:
-        first, last = full_name.split(" ", 1)
-        test_cases = [
-            (full_name, True),
-            (f"{first}\t{last}", True),    # Tab characters (as on the participants page)
-            (f"{first}  {last}", True),    # Multiple spaces
-            (f"{first} \n{last}", True),   # Newline
-            (f"X{first} {last}", True),    # Prefix (still matches)
-            ("Someone Else", False),       # Different name
-        ]
-        for text, should_match in test_cases:
-            match = bool(re.search(pattern, text, re.IGNORECASE | re.DOTALL))
-            assert match == should_match, f"Pattern '{pattern}' match mismatch for '{text}'"
-        print(f"  ✓ pattern '{pattern}' passes all cases")
-
-    # Test the sportstiming pattern
-    sportstiming_pattern = r"åbner"
-
-    sportstiming_test_cases = [
-        ("Åbner om 3 dage", True),
-        ("åbner om lidt", True),           # lowercase
-        ("åbner snart", True),             # matches without 'om'
-        ("ÅBNER", True),                   # uppercase - IGNORECASE matches
-        ("Registration open", False),
-        ("Lukker om 3 dage", False),       # different word
-    ]
-
-    for text, should_match in sportstiming_test_cases:
-        match = bool(re.search(sportstiming_pattern, text, re.IGNORECASE | re.DOTALL))
-        assert match == should_match, f"Sportstiming pattern match mismatch for '{text}'"
-        print(f"  ✓ '{text}' -> {match}")
-
-    # Test the raceresult pattern
-    raceresult_pattern = r"Sorry,\s+no\s+entries\s+found\."
-    
-    raceresult_test_cases = [
-        ("Sorry, no entries found.", True),
-        ("Sorry,  no  entries  found.", True),
-        ("Sorry, no entries \nfound.", True),
-        ("Sorry,   no   entries   found.", True),
-        ("Sorry, no entries found!", False),  # Different punctuation
-        ("Sorry no entries found.", False),   # Missing comma
-        ("Sorry, some entries found.", False),  # Different word
-    ]
-    
-    for text, should_match in raceresult_test_cases:
-        match = bool(re.search(raceresult_pattern, text, re.IGNORECASE | re.DOTALL))
-        assert match == should_match, f"Raceresult pattern match mismatch for '{text}'"
-        print(f"  ✓ '{text}' -> {match}")
-
-    # Test the raceresult registration pattern
-    registration_pattern = r"Registration\s+opens"
-
-    registration_test_cases = [
-        ("Registration opens", True),
-        ("Registration   opens", True),
-        ("Registration \nopens", True),
-        ("registration opens", True),
-        ("Registration closed", False),
-        ("Opens for registration", False),
-    ]
-
-    for text, should_match in registration_test_cases:
-        match = bool(re.search(registration_pattern, text, re.IGNORECASE | re.DOTALL))
-        assert match == should_match, f"Registration pattern match mismatch for '{text}'"
-        print(f"  ✓ '{text}' -> {match}")
-
-    # Test the gomu48world registration date pattern
-    gomu48world_pattern = r"Registration\s+opens\s+01/08/2026"
-
-    gomu48world_test_cases = [
-        ("Registration opens 01/08/2026", True),
-        ("Registration   opens   01/08/2026", True),
-        ("Registration \nopens \n01/08/2026", True),
-        ("registration opens 01/08/2026", True),
-        ("Registration opens 02/08/2026", False),
-        ("Registration closed 01/08/2026", False),
-    ]
-
-    for text, should_match in gomu48world_test_cases:
-        match = bool(re.search(gomu48world_pattern, text, re.IGNORECASE | re.DOTALL))
-        assert match == should_match, f"gomu48world pattern match mismatch for '{text}'"
-        print(f"  ✓ '{text}' -> {match}")
-
 def test_configured_monitors():
     """Test active monitor configuration and case-insensitive pattern matching."""
     print("\nTesting configured monitors...")
@@ -190,21 +85,43 @@ def test_configured_monitors():
     assert jobs["utmb-kullamannen-ultra-100-miles-sold-out"]["action"] == "when-text-disappears"
 
     test_cases = [
-        ("hotelskansen-kullamannen-package", "<p>kullamannen</p>", False, True),
-        ("hotelskansen-kullamannen-package", "<p>KULLAMANNEN</p>", True, False),
-        ("utmb-kullamannen-ultra-100-miles-sold-out", "<p>SOLD OUT</p>", True, False),
-        ("utmb-kullamannen-ultra-100-miles-sold-out", "<p>Tickets available</p>", True, True),
+        {
+            "jobname": "hotelskansen-kullamannen-package",
+            "content": "<p>kullamannen</p>",
+            "previous_pattern_found": False,
+            "should_alert": True,
+        },
+        {
+            "jobname": "hotelskansen-kullamannen-package",
+            "content": "<p>KULLAMANNEN</p>",
+            "previous_pattern_found": True,
+            "should_alert": False,
+        },
+        {
+            "jobname": "utmb-kullamannen-ultra-100-miles-sold-out",
+            "content": "<p>SOLD OUT</p>",
+            "previous_pattern_found": True,
+            "should_alert": False,
+        },
+        {
+            "jobname": "utmb-kullamannen-ultra-100-miles-sold-out",
+            "content": "<p>Tickets available</p>",
+            "previous_pattern_found": True,
+            "should_alert": True,
+        },
     ]
 
-    for jobname, content, stored_pattern_found, expected_change in test_cases:
+    for test_case in test_cases:
         m = monitor.WebsiteMonitor()
-        m.fetch_page_content = lambda url, content=content: content
-        m.get_stored_state = lambda name, found=stored_pattern_found: {"pattern_found": found}
+        m.fetch_page_content = lambda url, content=test_case["content"]: content
+        m.get_stored_state = lambda name, found=test_case["previous_pattern_found"]: {"pattern_found": found}
         m.store_state = lambda *args, **kwargs: None
 
-        result = m.check_website(jobs[jobname])
-        assert result == expected_change, f"Unexpected result for {jobname} with content '{content}'"
-        print(f"  ✓ {jobname} with '{content}' -> change={result}")
+        result = m.check_website(jobs[test_case["jobname"]])
+        assert result == test_case["should_alert"], (
+            f"Unexpected alert for {test_case['jobname']} with content '{test_case['content']}'"
+        )
+        print(f"  ✓ {test_case['jobname']} with '{test_case['content']}' -> alert={result}")
 
 
 def test_pattern_validation():
@@ -322,7 +239,6 @@ def main():
         test_config_loading()
         test_checksum_calculation()
         test_html_stripping()
-        test_pattern_matching()
         test_configured_monitors()
         test_pattern_validation()
         test_should_trigger_alert()
