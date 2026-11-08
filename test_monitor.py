@@ -76,6 +76,7 @@ def test_configured_monitors():
     assert set(jobs) == {
         "hotelskansen-kullamannen-package",
         "utmb-kullamannen-ultra-100-miles-sold-out",
+        "sportstiming-event-17984-results-round-106242",
     }
     assert jobs["hotelskansen-kullamannen-package"]["url"] == "https://hotelskansen.se/erbjudanden-paket/"
     assert jobs["hotelskansen-kullamannen-package"]["pattern"] == "Kullamannen"
@@ -83,6 +84,11 @@ def test_configured_monitors():
     assert jobs["utmb-kullamannen-ultra-100-miles-sold-out"]["url"] == "https://kullamannen.utmb.world/races/ultra-100-miles"
     assert jobs["utmb-kullamannen-ultra-100-miles-sold-out"]["pattern"] == r"sold\s+out"
     assert jobs["utmb-kullamannen-ultra-100-miles-sold-out"]["action"] == "when-text-disappears"
+    assert jobs["sportstiming-event-17984-results-round-106242"]["url"] == (
+        "https://www.sportstiming.dk/event/17984/results?round=106242"
+    )
+    assert jobs["sportstiming-event-17984-results-round-106242"]["pattern"] == "No results found"
+    assert jobs["sportstiming-event-17984-results-round-106242"]["action"] == "when-text-disappears"
 
     test_cases = [
         {
@@ -106,6 +112,18 @@ def test_configured_monitors():
         {
             "jobname": "utmb-kullamannen-ultra-100-miles-sold-out",
             "content": "<p>Tickets available</p>",
+            "previous_pattern_found": True,
+            "should_alert": True,
+        },
+        {
+            "jobname": "sportstiming-event-17984-results-round-106242",
+            "content": "<p>No results found</p>",
+            "previous_pattern_found": True,
+            "should_alert": False,
+        },
+        {
+            "jobname": "sportstiming-event-17984-results-round-106242",
+            "content": "<p>Results are available</p>",
             "previous_pattern_found": True,
             "should_alert": True,
         },
