@@ -11,3 +11,8 @@ jobs:
     url: https://kullamannen.utmb.world/races/ultra-100-miles
     pattern: "sold\\s+out"
     action: when-text-disappears
+
+  - jobname: sportstiming-event-17984-results-round-106242
+    url: https://www.sportstiming.dk/event/17984/results?round=106242
+    pattern: "No results found"
+    action: when-text-disappears
